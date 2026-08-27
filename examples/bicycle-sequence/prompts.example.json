@@ -1,0 +1,16 @@
+{
+  "first_prompt": "A red vintage bicycle parked beside a white stucco wall, side view, a quiet narrow street, soft overcast daylight, realistic photography, clean composition, no people",
+  "second_frame_prompt": "Keep the same red vintage bicycle, camera angle, framing, wall, and street. Change the lighting to warm golden hour and add a small wicker basket filled with yellow sunflowers to the handlebars. Preserve all other details.",
+  "third_frame_prompt": "Keep the exact same red vintage bicycle, wicker basket of yellow sunflowers, camera angle, framing, white wall, and street. Move time slightly later toward sunset. Make the sunflower heads lean gently to the right in a breeze and add a few yellow petals floating beside the basket. Preserve all bicycle geometry and all other details.",
+  "negative_prompt": "extra bicycle, duplicate wheels, malformed frame, changed camera angle, changed background, people, text, watermark",
+  "first_clip_prompt": "A cinematic locked side-view shot of the same red vintage bicycle against a white stucco wall. The soft daylight gradually warms into golden hour while a wicker basket filled with yellow sunflowers naturally appears on the handlebars. Subtle realistic motion, a gentle breeze, preserve the bicycle identity and geometry, camera remains still. Ambient quiet street sounds, no speech.",
+  "second_clip_prompt": "Continue the same cinematic locked side-view shot of the red vintage bicycle with its wicker basket of yellow sunflowers. The sunset light slowly deepens, the sunflower heads sway gently to the right, and a few yellow petals drift beside the basket. Keep the bicycle stationary and preserve its exact identity, geometry, wall, street, and framing. Ambient quiet street sounds, no speech.",
+  "width": 768,
+  "height": 768,
+  "first_seed": 42,
+  "second_frame_seed": 43,
+  "third_frame_seed": 44,
+  "first_clip_seed": 101,
+  "second_clip_seed": 102,
+  "clip_seconds": 5.0
+}

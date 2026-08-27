@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "comfyui-py-workflow"
+version = "0.1.0"
+description = "Run and chain local ComfyUI API workflows from Python."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "PolyForm Noncommercial License 1.0.0" }
+authors = []
+dependencies = []
+classifiers = [
+  "Development Status :: 2 - Pre-Alpha",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+media = ["av>=16"]
+
+[project.scripts]
+cpw-image-sequence = "comfyui_py_workflow.image_sequence:main"
+cpw-video-sequence = "comfyui_py_workflow.video_sequence:main"
+
+[project.urls]
+Repository = "https://github.com/marsguo2049/comfyui-py-workflow"
+Issues = "https://github.com/marsguo2049/comfyui-py-workflow/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
