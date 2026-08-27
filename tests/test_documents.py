@@ -57,7 +57,7 @@ def test_reads_image_only_pdf_with_offline_ocr(tmp_path: Path) -> None:
 
     image = Image.new("RGB", (1400, 260), "white")
     draw = ImageDraw.Draw(image)
-    font = ImageFont.truetype("C:/Windows/Fonts/arial.ttf", 72)
+    font = ImageFont.load_default(size=72)
     draw.text((60, 75), "OFFLINE STORY 2049", fill="black", font=font)
     buffer = BytesIO()
     image.save(buffer, format="PNG")
