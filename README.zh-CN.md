@@ -82,6 +82,8 @@ python -m pytest
 
 ## 许可证
 
-除非文件另有说明，原创软件采用 PolyForm Noncommercial License 1.0.0；原创文档和仓库 Demo 媒体采用 CC BY-NC 4.0。默认许可证不授予商业使用权，详见 [COMMERCIAL-USE.md](COMMERCIAL-USE.md)。
+除非文件另有说明，本仓库原创内容采用 **PolyForm Noncommercial License 1.0.0**。详见 [LICENSE](LICENSE)。
+
+该许可证覆盖的非商业用途可以使用。**商业使用需要事先取得作者的单独书面许可。**
 
 改编自 Comfy Org 的工作流模板保留其 MIT 声明。模型、自定义节点、ComfyUI 本身和其他第三方组件继续使用各自许可证，详见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
