@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "title": "The Last Delivery",
+  "summary": "A bicycle courier brings a restored pocket watch to a harbor workshop at dawn.",
+  "target_duration_seconds": 10.0,
+  "clip_seconds": 5.0,
+  "aspect_ratio": "16:9",
+  "visual_bible": {
+    "style": "cinematic photorealism, soft overcast dawn light, restrained teal and warm amber palette",
+    "characters": [
+      "an adult bicycle courier wearing a mustard rain jacket, matte black helmet, dark trousers, and a weathered canvas shoulder bag"
+    ],
+    "locations": [
+      "a quiet rain-soaked harbor road with brick warehouses and an old railway bridge",
+      "a small warmly lit mechanical workshop near the waterfront"
+    ],
+    "continuity_rules": [
+      "keep the courier's face, mustard jacket, helmet, bicycle, shoulder bag, and red parcel consistent",
+      "maintain wet pavement, light rain, dawn lighting, and the same cinematic color grade"
+    ],
+    "global_negative_prompt": "duplicate people or bicycles, identity drift, changed clothing, distorted hands, distorted bicycle geometry, extra wheels, floating objects, unintended text, logo, watermark"
+  },
+  "shots": [
+    {
+      "index": 1,
+      "duration_seconds": 5.0,
+      "transition_from_previous": "cut",
+      "summary": "The courier rides along the harbor road toward the railway bridge.",
+      "start_frame_prompt": "Wide cinematic 16:9 establishing frame of an adult bicycle courier in a mustard rain jacket and matte black helmet riding a dark city bicycle along a rain-soaked harbor road at dawn, weathered canvas shoulder bag holding a small red parcel, brick warehouses and cranes in mist, old railway bridge ahead, wet pavement reflections, soft overcast light, cinematic photorealism, restrained teal and warm amber palette",
+      "end_frame_edit_prompt": "Move the same courier and unchanged bicycle forward to directly beneath the old railway bridge; preserve face, mustard jacket, helmet, shoulder bag, red parcel, harbor setting, rain, dawn lighting, camera height, lens, and cinematic color grade. Add subtle water spray from the tires and slightly closer framing.",
+      "video_prompt": "The courier pedals steadily from the harbor road toward and beneath the railway bridge. The camera performs a smooth low tracking movement alongside the bicycle, with natural wheel rotation, light tire spray, falling rain, distant gulls, soft wind, and quiet harbor ambience. Preserve the exact rider, clothing, bicycle, bag, and environment shown in the endpoint frames."
+    },
+    {
+      "index": 2,
+      "duration_seconds": 5.0,
+      "transition_from_previous": "continuous",
+      "summary": "The courier reaches the workshop and stops at its illuminated doorway.",
+      "start_frame_prompt": "The same courier and bicycle beneath the old railway bridge in the rain-soaked harbor district at dawn, continuing toward a small workshop ahead.",
+      "end_frame_edit_prompt": "Move the same courier to a complete stop beside the warmly illuminated doorway of a small mechanical workshop; keep the courier's face, mustard jacket, black helmet, bicycle, canvas bag, and red parcel unchanged. Preserve the wet harbor road and dawn atmosphere while making the workshop's amber interior light more visible.",
+      "video_prompt": "The courier emerges from beneath the bridge, approaches the small workshop, slows naturally, and stops beside its warm doorway. Use a smooth rear three-quarter tracking shot that gently settles as the bicycle stops. Include realistic wheel deceleration, light rain, tire sounds on wet pavement, subtle chain noise, harbor ambience, and no dialogue. Preserve identity and object continuity between both endpoint frames."
+    }
+  ]
+}

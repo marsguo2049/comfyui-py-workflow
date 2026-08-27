@@ -16,6 +16,8 @@
 - 三帧视频链：Qwen 生成第 3 帧 → MiniMax H3 生成两段首尾帧视频 → 拼接为 10 秒 MP4。
 - 用于脚本自动化的 API 工作流和用于可视化编辑的 UI 工作流。
 - 真实单车示例、清除隐藏元数据的预览帧和最终视频。
+- 使用本地 LM Studio 从文本、Markdown、DOCX 和文本型 PDF 生成分镜。
+- 动态镜头数量、模型专用提示词，以及先审阅再执行的安全模式。
 
 ## 处理流程
 
@@ -30,10 +32,10 @@ Z-Image 生成第 1 帧
 
 ## 快速开始
 
-安装项目和媒体处理依赖：
+安装项目、文档和媒体处理依赖：
 
 ```powershell
-python -m pip install -e ".[media]"
+python -m pip install -e ".[all]"
 ```
 
 在 `http://127.0.0.1:8188` 启动 ComfyUI，安装文档列出的模型和自定义节点，然后运行完整示例：
@@ -50,6 +52,33 @@ python examples/bicycle-sequence/run.py
 cpw-image-sequence --help
 cpw-video-sequence --help
 ```
+
+## 自动从故事生成视频计划
+
+启动 LM Studio 本地服务后，先只生成计划，不运行耗时的图片和视频模型：
+
+```powershell
+cpw-story-video `
+  --input examples/auto-story-video/story.example.md `
+  --duration 20 `
+  --model "你的-LM-STUDIO-模型-ID"
+```
+
+LM Studio 会返回受 JSON Schema 约束的计划。Python 根据目标时间严格确定镜头数量和每段时长；本地模型负责选择情节节点、连续转场或切镜、统一视觉设定，并分别编写 Z-Image、Qwen Image Edit 和 MiniMax H3 提示词。计划默认保存在 `outputs/story-video/plans/`，方便生成媒体前人工检查。
+
+检查或修改计划后，启动 ComfyUI 并执行：
+
+```powershell
+cpw-story-video --plan outputs/story-video/plans/计划编号/story-plan.json --execute
+```
+
+对于显存有限的电脑，推荐使用这两条命令：生成计划后关闭 LM Studio 或卸载其中的模型，再启动 ComfyUI。如果同一条命令同时使用故事输入和 `--execute`，CLI 会先通过本地 API 卸载 LM Studio 模型，再连接 ComfyUI。只有显式指定 `--keep-lm-loaded` 才会保留模型；12GB 显存不推荐这样做。
+
+短故事可以用 `--story` 直接输入；TXT、Markdown、DOCX 和文本型 PDF 使用 `--input`。长文档会先在本地分块摘要，再进行分镜。扫描版 PDF 必须先 OCR，因为当前流程传给 LM Studio 的是提取文本，而不是页面图片。LM Studio 地址默认限制为本机回环地址，避免误把文档发送到远程服务器。完整说明见[自动故事视频示例](examples/auto-story-video/README.md)。
+
+纯 ComfyUI 可以执行已经存在的 `story-plan.json`，包括人工编写或修改的计划；但扩散模型使用的文本编码器不是通用对话大模型，不能可靠代替 LM Studio 完成长文理解和结构化分镜。通过 ComfyUI custom node 再加载一个完整 LLM，通常仍会消耗相近的模型内存，并增加依赖复杂度。
+
+如果想完全跳过 LM Studio，可以直接用明确标注为公开内容的 [`story-plan.example.json`](examples/auto-story-video/story-plan.example.json) 配合 `--execute` 演示，也可以按照相同结构人工编写计划。
 
 ## 工作流与模型
 
@@ -71,12 +100,13 @@ cpw-video-sequence --help
 - `workflows/api`：Python 使用的 API 图。
 - `workflows/ui`：可编辑的 ComfyUI 画布工作流。
 - `examples/bicycle-sequence`：可运行示例和脱敏媒体。
+- `examples/auto-story-video`：本地 LM Studio 自动分镜示例。
 - `tests`：离线客户端、工作流与隐私检查。
 
 ## 测试
 
 ```powershell
-python -m pip install -e ".[dev,media]"
+python -m pip install -e ".[dev,all]"
 python -m pytest
 ```
 

@@ -217,9 +217,22 @@ def _stream_keys(container: av.container.InputContainer) -> list[tuple[str, int,
     return result
 
 
-def remux_segments(sources: list[Path], destination: Path, *, segment_seconds: float) -> None:
+def remux_segments(
+    sources: list[Path],
+    destination: Path,
+    *,
+    segment_seconds: float | list[float],
+) -> None:
     if not sources:
         raise ValueError("At least one media source is required")
+    if isinstance(segment_seconds, list):
+        durations = [Fraction(str(value)) for value in segment_seconds]
+        if len(durations) != len(sources):
+            raise ValueError("One segment duration is required for each source")
+    else:
+        durations = [Fraction(str(segment_seconds))] * len(sources)
+    if any(value <= 0 for value in durations):
+        raise ValueError("Segment durations must be positive")
     destination.parent.mkdir(parents=True, exist_ok=True)
     with av.open(str(destination), mode="w") as output:
         with av.open(str(sources[0])) as template:
@@ -230,7 +243,8 @@ def remux_segments(sources: list[Path], destination: Path, *, segment_seconds: f
         if not output_streams:
             raise RuntimeError(f"No video or audio streams found in {sources[0]}")
 
-        for segment_index, source in enumerate(sources):
+        elapsed = Fraction(0)
+        for source, duration in zip(sources, durations):
             with av.open(str(source)) as current:
                 input_streams = _stream_keys(current)
                 stream_map = {
@@ -238,7 +252,7 @@ def remux_segments(sources: list[Path], destination: Path, *, segment_seconds: f
                     for kind, ordinal, stream in input_streams
                 }
                 origins: dict[int, int] = {}
-                offset = Fraction(segment_index) * Fraction(str(segment_seconds))
+                offset = elapsed
                 for packet in current.demux([stream for _, _, stream in input_streams]):
                     if packet.dts is None:
                         continue
@@ -246,13 +260,14 @@ def remux_segments(sources: list[Path], destination: Path, *, segment_seconds: f
                     local_pts = packet.pts - origin if packet.pts is not None else None
                     local_dts = packet.dts - origin
                     decode_time = Fraction(local_dts) * packet.time_base
-                    if decode_time >= Fraction(str(segment_seconds)):
+                    if decode_time >= duration:
                         continue
                     offset_ticks = int(offset / packet.time_base)
                     packet.pts = local_pts + offset_ticks if local_pts is not None else None
                     packet.dts = local_dts + offset_ticks
                     packet.stream = stream_map[packet.stream.index]
                     output.mux(packet)
+            elapsed += duration
 
 
 def media_duration(path: str | Path) -> float:

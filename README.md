@@ -16,6 +16,8 @@ This repository focuses on execution infrastructure rather than model-routing re
 - A three-frame video chain: Qwen frame 3 → two MiniMax H3 first/last-frame clips → one ten-second MP4.
 - API-format graphs for automation and UI-format graphs for visual editing.
 - A real bicycle example with metadata-clean preview frames and final video.
+- Local LM Studio story planning from text, Markdown, DOCX, and text-based PDF.
+- Dynamic shot counts, model-specific prompts, and review-before-execution mode.
 
 ## Pipeline
 
@@ -30,10 +32,10 @@ Z-Image frame 1
 
 ## Quick start
 
-Install the project and the optional media dependency:
+Install the project with document and media support:
 
 ```powershell
-python -m pip install -e ".[media]"
+python -m pip install -e ".[all]"
 ```
 
 Start ComfyUI at `http://127.0.0.1:8188`, install the documented models and custom nodes, then run the complete public example:
@@ -50,6 +52,53 @@ The lower-level commands are also available:
 cpw-image-sequence --help
 cpw-video-sequence --help
 ```
+
+## Automatic story-to-video planning
+
+Start the LM Studio local server, then create a plan without running expensive
+image or video generation:
+
+```powershell
+cpw-story-video `
+  --input examples/auto-story-video/story.example.md `
+  --duration 20 `
+  --model "YOUR-LM-STUDIO-MODEL-ID"
+```
+
+LM Studio returns a JSON-schema-constrained plan. Python fixes the number and
+duration of shots from the requested runtime; the model chooses story beats,
+continuous transitions versus cuts, a visual bible, and separate prompts for
+Z-Image, Qwen Image Edit, and MiniMax H3. The generated plan is written below
+`outputs/story-video/plans/` for review.
+
+After reviewing or editing the plan, start ComfyUI and execute it:
+
+```powershell
+cpw-story-video --plan outputs/story-video/plans/PLAN-ID/story-plan.json --execute
+```
+
+This two-command flow is recommended on limited-VRAM machines: close LM Studio
+or unload its model before starting ComfyUI. If `--execute` is used in the same
+command that creates a plan, the CLI unloads the LM Studio model through its
+local API before contacting ComfyUI. Keeping both models loaded requires the
+explicit `--keep-lm-loaded` flag and is not recommended for a 12 GB GPU.
+
+Direct text is accepted with `--story`. TXT, Markdown, DOCX, and text-based PDFs
+are accepted with `--input`. Long sources are summarized in local chunks before
+storyboarding. Scanned PDFs require OCR because this pipeline sends extracted
+text—not document page images—to LM Studio. LM Studio is restricted to a
+loopback URL by default so document content is not accidentally sent to a remote
+server. See [the automatic example](examples/auto-story-video/README.md).
+
+ComfyUI alone can execute an existing `story-plan.json`, including one written
+or edited manually. Its diffusion text encoders are not general chat LLMs, so
+they cannot replace LM Studio for reliable document understanding and
+storyboarding. Loading a full LLM through a ComfyUI custom node would consume
+similar model memory while adding a more fragile dependency.
+
+For a no-LM-Studio demonstration, run the explicitly public
+[`story-plan.example.json`](examples/auto-story-video/story-plan.example.json)
+directly with `--execute`.
 
 ## Workflows and models
 
@@ -71,12 +120,13 @@ The [bicycle sequence](examples/bicycle-sequence/README.md) contains three keyfr
 - `workflows/api`: prompt/API graphs consumed by Python.
 - `workflows/ui`: editable ComfyUI canvas exports.
 - `examples/bicycle-sequence`: runnable example and sanitized media.
+- `examples/auto-story-video`: local LM Studio planning example.
 - `tests`: offline client, workflow, and privacy checks.
 
 ## Tests
 
 ```powershell
-python -m pip install -e ".[dev,media]"
+python -m pip install -e ".[dev,all]"
 python -m pytest
 ```
 
