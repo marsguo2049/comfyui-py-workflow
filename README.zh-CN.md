@@ -18,6 +18,7 @@
 - 真实单车示例、清除隐藏元数据的预览帧和最终视频。
 - 使用本地 LM Studio 从文本、Markdown、DOCX 和文本型 PDF 生成分镜。
 - 动态镜头数量、模型专用提示词，以及先审阅再执行的安全模式。
+- Offline Story Studio 可选上传一张私有参考图，并用 Qwen Image Edit 保持新场景的主体或画风。
 
 ## 处理流程
 

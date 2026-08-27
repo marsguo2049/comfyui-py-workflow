@@ -81,8 +81,27 @@ def test_plan_rejects_wrong_duration() -> None:
 
 
 def test_schema_requires_exact_shot_count() -> None:
-    shots = story_plan_schema(4)["properties"]["shots"]
+    schema = story_plan_schema(4)
+    shots = schema["properties"]["shots"]
     assert shots["minItems"] == shots["maxItems"] == 4
+    assert "dialogue_mode" in schema["required"]
+
+
+def test_no_dialogue_mode_rejects_tagged_speech() -> None:
+    data = plan_data()
+    data["dialogue_mode"] = "none"
+    data["shots"][0]["video_prompt"] += " <d>[Chinese] 出发。</d>"
+    with pytest.raises(StoryPlanError, match="cannot contain"):
+        StoryPlan.from_dict(data)
+
+
+def test_dialogue_mode_requires_at_least_one_exact_tagged_line() -> None:
+    data = plan_data()
+    data["dialogue_mode"] = "dialogue"
+    with pytest.raises(StoryPlanError, match="requires at least one"):
+        StoryPlan.from_dict(data)
+    data["shots"][0]["video_prompt"] += " (S1) says: <d>[Chinese] 出发。</d>"
+    assert StoryPlan.from_dict(data).dialogue_mode == "dialogue"
 
 
 def test_chunk_text_preserves_content_order() -> None:
@@ -107,6 +126,46 @@ def test_planner_accepts_valid_structured_result() -> None:
         aspect_ratio="16:9",
     )
     assert len(plan.shots) == 3
+
+
+def test_planner_applies_requested_no_dialogue_mode() -> None:
+    class FakeClient:
+        def structured_chat(self, **kwargs):
+            return plan_data()
+
+    plan = create_story_plan(
+        FakeClient(),
+        model="local/model",
+        source_text="信使穿过雨夜街道。",
+        target_duration_seconds=12,
+        clip_seconds=5,
+        aspect_ratio="16:9",
+        dialogue_mode="none",
+    )
+    assert plan.dialogue_mode == "none"
+
+
+def test_planner_explains_how_the_uploaded_reference_image_is_used() -> None:
+    calls = []
+
+    class FakeClient:
+        def structured_chat(self, **kwargs):
+            calls.append(kwargs)
+            return plan_data()
+
+    create_story_plan(
+        FakeClient(),
+        model="local/model",
+        source_text="信使穿过雨夜街道。",
+        target_duration_seconds=12,
+        clip_seconds=5,
+        aspect_ratio="16:9",
+        has_reference_image=True,
+    )
+
+    user_prompt = calls[0]["messages"][1]["content"]
+    assert "single user-supplied reference image" in user_prompt
+    assert "authoritative source" in user_prompt
 
 
 def test_planner_rejects_model_changing_requested_duration() -> None:

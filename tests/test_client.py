@@ -33,3 +33,13 @@ def test_extracts_output_assets() -> None:
 
 def test_builds_uploaded_input_reference() -> None:
     assert ComfyUIClient.input_reference({"name": "frame.png", "subfolder": "cpw"}) == "cpw/frame.png"
+
+
+def test_rejects_remote_comfyui_address_by_default() -> None:
+    with pytest.raises(ValueError, match="loopback"):
+        ComfyUIClient("https://example.com")
+
+
+def test_accepts_loopback_comfyui_address() -> None:
+    client = ComfyUIClient("http://127.0.0.1:8188")
+    assert client.base_url == "http://127.0.0.1:8188"

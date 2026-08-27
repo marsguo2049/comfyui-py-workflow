@@ -9,7 +9,7 @@ from pathlib import Path
 from time import monotonic, sleep
 from typing import Any
 from urllib.error import HTTPError, URLError
-from urllib.parse import quote, urlencode
+from urllib.parse import quote, urlencode, urlparse
 from urllib.request import Request, urlopen
 
 
@@ -41,12 +41,29 @@ def load_workflow_template(path: str | Path) -> dict[str, Any]:
 class ComfyUIClient:
     """Small transport boundary for exported ComfyUI API-format workflows."""
 
-    def __init__(self, base_url: str, timeout_seconds: float = 30.0) -> None:
+    def __init__(
+        self,
+        base_url: str,
+        timeout_seconds: float = 30.0,
+        *,
+        allow_remote: bool = False,
+    ) -> None:
         self.base_url = base_url.rstrip("/")
         self.timeout_seconds = timeout_seconds
+        hostname = (urlparse(self.base_url).hostname or "").lower()
+        if not allow_remote and hostname not in {"127.0.0.1", "localhost", "::1"}:
+            raise ValueError(
+                "ComfyUI must use a loopback address unless allow_remote=True is explicitly set"
+            )
 
     def check_health(self) -> dict[str, Any]:
         return self._request_json("/system_stats")
+
+    def get_object_info(self) -> dict[str, Any]:
+        return self._request_json("/object_info")
+
+    def get_queue(self) -> dict[str, Any]:
+        return self._request_json("/queue")
 
     @staticmethod
     def apply_substitutions(

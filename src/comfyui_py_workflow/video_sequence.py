@@ -234,7 +234,9 @@ def remux_segments(
     if any(value <= 0 for value in durations):
         raise ValueError("Segment durations must be positive")
     destination.parent.mkdir(parents=True, exist_ok=True)
-    with av.open(str(destination), mode="w") as output:
+    # Place the MP4 moov atom before media data so browsers can begin and seek
+    # without first fetching metadata from the end of a large local file.
+    with av.open(str(destination), mode="w", options={"movflags": "+faststart"}) as output:
         with av.open(str(sources[0])) as template:
             output_streams = {
                 (kind, ordinal): output.add_stream_from_template(stream)

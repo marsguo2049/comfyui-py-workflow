@@ -94,6 +94,7 @@ class LMStudioClient:
         schema: dict[str, Any],
         temperature: float = 0.3,
         max_tokens: int = 8192,
+        disable_reasoning: bool = True,
     ) -> dict[str, Any]:
         payload = {
             "model": model,
@@ -110,12 +111,48 @@ class LMStudioClient:
             "max_tokens": max_tokens,
             "stream": False,
         }
+        # Reasoning-capable models can spend the entire output budget in
+        # reasoning_content and leave message.content empty. Structured tasks
+        # need the JSON itself, so use LM Studio's OpenAI-compatible switch to
+        # reserve the budget for the schema-constrained answer.
+        if disable_reasoning:
+            payload["reasoning_effort"] = "none"
         result = self._request_json("/chat/completions", method="POST", payload=payload)
+        choices = result.get("choices")
+        if not isinstance(choices, list) or not choices or not isinstance(choices[0], dict):
+            raise LMStudioError("LM Studio returned a malformed chat completion")
+        choice = choices[0]
+        message = choice.get("message")
+        content = message.get("content") if isinstance(message, dict) else None
+        finish_reason = str(choice.get("finish_reason") or "unknown")
+        usage = result.get("usage") if isinstance(result.get("usage"), dict) else {}
+        details = (
+            usage.get("completion_tokens_details")
+            if isinstance(usage.get("completion_tokens_details"), dict)
+            else {}
+        )
+        reasoning_tokens = details.get("reasoning_tokens", 0)
+        completion_tokens = usage.get("completion_tokens", 0)
+        if not isinstance(content, str) or not content.strip():
+            if finish_reason == "length":
+                raise LMStudioError(
+                    "LM Studio exhausted the output/context limit before returning JSON "
+                    f"(finish_reason=length, completion_tokens={completion_tokens}, "
+                    f"reasoning_tokens={reasoning_tokens}). Disable model reasoning or "
+                    "reload the model with a larger context length."
+                )
+            raise LMStudioError(
+                "LM Studio returned an empty structured response "
+                f"(finish_reason={finish_reason}, reasoning_tokens={reasoning_tokens})"
+            )
         try:
-            content = result["choices"][0]["message"]["content"]
             parsed = json.loads(content)
-        except (KeyError, IndexError, TypeError, json.JSONDecodeError) as exc:
-            raise LMStudioError("LM Studio returned an invalid structured response") from exc
+        except json.JSONDecodeError as exc:
+            preview = " ".join(content[:160].splitlines())
+            raise LMStudioError(
+                "LM Studio returned incomplete or invalid structured JSON "
+                f"(finish_reason={finish_reason}, preview={preview!r})"
+            ) from exc
         if not isinstance(parsed, dict):
             raise LMStudioError("LM Studio structured response must be a JSON object")
         return parsed

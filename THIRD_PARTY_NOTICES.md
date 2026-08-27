@@ -30,3 +30,9 @@ That upstream repository is licensed under the MIT License:
 ComfyUI is distributed separately under GPL-3.0. Model weights, LoRAs, text
 encoders, VAEs, and custom-node packages referenced by the workflows are not
 distributed in this repository and retain their own licenses and terms.
+
+The optional offline OCR installation uses RapidOCR (Apache-2.0), ONNX Runtime
+(MIT), OpenCV (Apache-2.0), and PyMuPDF. PyMuPDF is offered under the GNU AGPL
+and a commercial license by its publisher. These packages are installed into
+the user's local environment and are not copied into this source repository.
+Their own license terms continue to apply.

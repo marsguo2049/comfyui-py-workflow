@@ -18,6 +18,9 @@ This repository focuses on execution infrastructure rather than model-routing re
 - A real bicycle example with metadata-clean preview frames and final video.
 - Local LM Studio story planning from text, Markdown, DOCX, and text-based PDF.
 - Dynamic shot counts, model-specific prompts, and review-before-execution mode.
+- MiniMax H3 FL2VA prompts with selectable automatic, disabled, or required dialogue.
+- Browser-friendly fast-start MP4 output with seeking and byte-range playback.
+- Optional private single-image reference input for Qwen-based scene keyframes.
 
 ## Pipeline
 
@@ -37,6 +40,21 @@ Install the project with document and media support:
 ```powershell
 python -m pip install -e ".[all]"
 ```
+
+For the offline browser UI, double-click `start-local-ui.bat` on Windows or run:
+
+```powershell
+cpw-local-ui
+```
+
+The UI binds to `127.0.0.1`, accepts PDF/DOCX/Markdown/TXT plus one optional
+PNG/JPEG/WebP visual reference, asks a local LM
+Studio model to analyze the story and recommend a duration, requires separate
+duration and storyboard confirmations, unloads the text model before rendering,
+checks the local ComfyUI workflows, and shows resumable generation progress and
+local media results. When a reference image is present, independent scene starts
+use Qwen Image Edit instead of Z-Image; continuous shots still inherit the prior
+end frame. See [the Chinese offline guide](OFFLINE_STUDIO.zh-CN.md).
 
 Start ComfyUI at `http://127.0.0.1:8188`, install the documented models and custom nodes, then run the complete public example:
 

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "comfyui-py-workflow"
-version = "0.2.0"
+version = "0.5.0"
 description = "Run and chain local ComfyUI API workflows from Python."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -23,12 +23,14 @@ classifiers = [
 dev = ["pytest>=8"]
 documents = ["pypdf>=5"]
 media = ["av>=16"]
-all = ["av>=16", "pypdf>=5"]
+ocr = ["PyMuPDF>=1.26", "rapidocr>=3.9", "onnxruntime>=1.22"]
+all = ["av>=16", "pypdf>=5", "PyMuPDF>=1.26", "rapidocr>=3.9", "onnxruntime>=1.22"]
 
 [project.scripts]
 cpw-image-sequence = "comfyui_py_workflow.image_sequence:main"
 cpw-video-sequence = "comfyui_py_workflow.video_sequence:main"
 cpw-story-video = "comfyui_py_workflow.auto_story_video:main"
+cpw-local-ui = "comfyui_py_workflow.local_ui:main"
 
 [project.urls]
 Repository = "https://github.com/marsguo2049/comfyui-py-workflow"
@@ -36,6 +38,9 @@ Issues = "https://github.com/marsguo2049/comfyui-py-workflow/issues"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+comfyui_py_workflow = ["web/*.html", "web/*.css", "web/*.js"]
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]

@@ -12,6 +12,7 @@ class StoryPlanError(ValueError):
 
 
 SUPPORTED_ASPECT_RATIOS = {"1:1", "2:3", "3:2", "3:4", "4:3", "9:16", "16:9", "21:9"}
+SUPPORTED_DIALOGUE_MODES = {"auto", "none", "dialogue"}
 
 
 def clip_durations(target_seconds: float, clip_seconds: float = 5.0) -> list[float]:
@@ -55,6 +56,7 @@ class StoryPlan:
     aspect_ratio: str
     visual_bible: VisualBible
     shots: list[StoryShot]
+    dialogue_mode: str = "auto"
 
     @property
     def estimated_frame_count(self) -> int:
@@ -70,6 +72,8 @@ class StoryPlan:
             raise StoryPlanError("Story plan title and summary are required")
         if self.aspect_ratio not in SUPPORTED_ASPECT_RATIOS:
             raise StoryPlanError(f"Unsupported aspect ratio: {self.aspect_ratio}")
+        if self.dialogue_mode not in SUPPORTED_DIALOGUE_MODES:
+            raise StoryPlanError(f"Unsupported dialogue mode: {self.dialogue_mode}")
         expected = clip_durations(self.target_duration_seconds, self.clip_seconds)
         if len(self.shots) != len(expected):
             raise StoryPlanError(
@@ -99,10 +103,19 @@ class StoryPlan:
                 raise StoryPlanError(
                     f"Shot {position} has empty required fields: {', '.join(missing)}"
                 )
+            has_open_tag = "<d>" in shot.video_prompt
+            has_close_tag = "</d>" in shot.video_prompt
+            if has_open_tag != has_close_tag:
+                raise StoryPlanError(f"Shot {position} has an incomplete H3 dialogue tag")
         if not self.visual_bible.style.strip():
             raise StoryPlanError("Visual bible style is required")
         if not self.visual_bible.global_negative_prompt.strip():
             raise StoryPlanError("A global negative prompt is required")
+        has_dialogue = any("<d>" in shot.video_prompt for shot in self.shots)
+        if self.dialogue_mode == "none" and has_dialogue:
+            raise StoryPlanError("Dialogue mode 'none' cannot contain H3 <d> dialogue tags")
+        if self.dialogue_mode == "dialogue" and not has_dialogue:
+            raise StoryPlanError("Dialogue mode 'dialogue' requires at least one H3 <d> dialogue tag")
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -154,6 +167,7 @@ class StoryPlan:
                 aspect_ratio=str(data["aspect_ratio"]),
                 visual_bible=bible,
                 shots=shots,
+                dialogue_mode=str(data.get("dialogue_mode", "auto")),
             )
         except (KeyError, TypeError, ValueError) as exc:
             raise StoryPlanError(f"Malformed story plan: {exc}") from exc
@@ -199,6 +213,10 @@ def story_plan_schema(shot_count: int) -> dict[str, Any]:
             "target_duration_seconds": {"type": "number", "exclusiveMinimum": 0},
             "clip_seconds": {"type": "number", "exclusiveMinimum": 0},
             "aspect_ratio": string,
+            "dialogue_mode": {
+                "type": "string",
+                "enum": sorted(SUPPORTED_DIALOGUE_MODES),
+            },
             "visual_bible": {
                 "type": "object",
                 "additionalProperties": False,
@@ -231,6 +249,7 @@ def story_plan_schema(shot_count: int) -> dict[str, Any]:
             "target_duration_seconds",
             "clip_seconds",
             "aspect_ratio",
+            "dialogue_mode",
             "visual_bible",
             "shots",
         ],

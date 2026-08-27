@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import math
+import re
 import uuid
 from dataclasses import asdict
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 from .client import ComfyUIAsset, ComfyUIClient, load_workflow_template
 from .story_plan import StoryPlan
@@ -23,6 +25,68 @@ ASPECT_RATIOS = {
     "16:9": "16:9 (Widescreen)",
     "21:9": "21:9 (Ultrawide)",
 }
+
+
+def prepare_h3_prompt(
+    prompt: str,
+    *,
+    duration_seconds: float,
+    dialogue_mode: str,
+) -> str:
+    """Normalize a shot into MiniMax H3's official FL2VA prompt structure."""
+    raw = prompt.strip()
+    raw = re.sub(
+        r"^How the reference pictures align with the target video[^\n]*\n+",
+        "",
+        raw,
+        flags=re.IGNORECASE,
+    )
+    alignment = (
+        "How the reference pictures align with the target video — "
+        "Picture 1 (from Shot 1) aligns with the 0.00-second mark of the target video; "
+        f"Picture 2 (from Shot 1) aligns with the {duration_seconds:.2f}-second mark "
+        "of the target video."
+    )
+
+    if "integrated_multimodal_description:" not in raw:
+        # Legacy plans mixed visual motion and sound in one free-form sentence.
+        # Keep the visual portion, but do not carry vague voice instructions
+        # forward because they can cause H3 to invent unintelligible speech.
+        visual = re.split(
+            r"(?:音效|声音|sound effects?|audio)\s*[:：]",
+            raw,
+            maxsplit=1,
+            flags=re.IGNORECASE,
+        )[0].strip()
+        raw = (
+            f"integrated_multimodal_description: [Shot 1] {visual}\n\n"
+            "overall_soundscape: Natural environmental ambience and synchronized "
+            "physical action sounds only.\n\n"
+            "non_diegetic_music: N/A"
+        )
+
+    has_dialogue = "<d>" in raw and "</d>" in raw
+    if dialogue_mode == "none" or (dialogue_mode == "auto" and not has_dialogue):
+        no_speech = (
+            " No character speaks, whispers, sings, or produces intelligible words; "
+            "visible mouths remain closed except for explicitly described non-verbal reactions."
+        )
+        marker = "\noverall_soundscape:"
+        if marker in raw:
+            raw = raw.replace(marker, no_speech + "\n\noverall_soundscape:", 1)
+        else:
+            raw += no_speech
+        raw = raw.replace(
+            "overall_soundscape:",
+            "overall_soundscape: No dialogue, narration, singing, or intelligible speech is audible. ",
+            1,
+        )
+
+    return f"{alignment}\n\n{raw}"
+
+
+class GenerationCancelled(RuntimeError):
+    """Raised between generation stages when a local user requests cancellation."""
 
 
 def resolution_for_aspect(
@@ -62,53 +126,166 @@ class StoryVideoExecutor:
         base_seed: int = 1000,
         image_timeout_seconds: float = 900.0,
         video_timeout_seconds: float = 1800.0,
+        destination: str | Path | None = None,
+        resume: bool = False,
+        progress_callback: Callable[[dict[str, Any]], None] | None = None,
+        cancel_check: Callable[[], bool] | None = None,
+        reference_image: str | Path | None = None,
     ) -> Path:
         plan.validate()
         self.client.check_health()
-        run_id = f"{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}-{uuid.uuid4().hex[:8]}"
-        destination = Path(output_root) / run_id
-        destination.mkdir(parents=True, exist_ok=False)
-        plan.write(destination / "story-plan.json")
+        generated_run_id = (
+            f"{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}-{uuid.uuid4().hex[:8]}"
+        )
+        destination_path = Path(destination) if destination is not None else Path(output_root) / generated_run_id
+        metadata_path = destination_path / "run.json"
+        plan_payload = json.dumps(plan.to_dict(), ensure_ascii=False, sort_keys=True).encode("utf-8")
+        plan_sha256 = hashlib.sha256(plan_payload).hexdigest()
+        reference_path = Path(reference_image) if reference_image is not None else None
+        if reference_path is not None and not reference_path.is_file():
+            raise FileNotFoundError(f"Reference image not found: {reference_path}")
+        reference_sha256 = (
+            hashlib.sha256(reference_path.read_bytes()).hexdigest()
+            if reference_path is not None
+            else None
+        )
         width, height = resolution_for_aspect(plan.aspect_ratio)
-        metadata: dict[str, Any] = {
-            "run_id": run_id,
-            "status": "running",
-            "target_duration_seconds": plan.target_duration_seconds,
-            "estimated_frame_count": plan.estimated_frame_count,
-            "resolution": {"width": width, "height": height},
-            "shots": [],
-        }
-        self._write_metadata(destination, metadata)
+
+        if resume and metadata_path.is_file():
+            metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+            if metadata.get("plan_sha256") not in {None, plan_sha256}:
+                raise ValueError("Cannot resume: story-plan.json changed after rendering started")
+            if metadata.get("reference_sha256") != reference_sha256:
+                raise ValueError("Cannot resume: the reference image changed after rendering started")
+            run_id = str(metadata.get("run_id") or destination_path.name)
+            if metadata.get("status") == "succeeded" and (destination_path / "final.mp4").is_file():
+                self._notify(progress_callback, {
+                    "stage": "completed",
+                    "message": "任务已经完成，无需重复生成。",
+                    "completed_shots": len(plan.shots),
+                    "total_shots": len(plan.shots),
+                    "completed_seconds": plan.target_duration_seconds,
+                })
+                return destination_path
+        else:
+            destination_path.mkdir(parents=True, exist_ok=False)
+            run_id = generated_run_id if destination is None else destination_path.name
+            metadata = {
+                "run_id": run_id,
+                "status": "running",
+                "plan_sha256": plan_sha256,
+                "reference_sha256": reference_sha256,
+                "reference_image": reference_path.name if reference_path is not None else None,
+                "target_duration_seconds": plan.target_duration_seconds,
+                "estimated_frame_count": plan.estimated_frame_count,
+                "resolution": {"width": width, "height": height},
+                "shots": [],
+            }
+
+        destination_path.mkdir(parents=True, exist_ok=True)
+        plan.write(destination_path / "story-plan.json")
+        metadata["status"] = "running"
+        metadata["plan_sha256"] = plan_sha256
+        metadata.pop("error", None)
+        self._write_metadata(destination_path, metadata)
 
         current_end: Path | None = None
         frame_number = 0
         raw_clips: list[Path] = []
         durations: list[float] = []
+        completed_records = metadata.get("shots", [])
+        if not isinstance(completed_records, list):
+            raise ValueError("Cannot resume: run.json has malformed shot records")
+        if len(completed_records) > len(plan.shots):
+            raise ValueError("Cannot resume: run.json contains too many shots")
+        for expected_index, record in enumerate(completed_records, start=1):
+            if not isinstance(record, dict) or record.get("index") != expected_index:
+                raise ValueError("Cannot resume: completed shot records are not sequential")
+            start_frame = destination_path / str(record.get("start_frame", ""))
+            end_frame = destination_path / str(record.get("end_frame", ""))
+            clip_data = record.get("clip", {})
+            clip = destination_path / str(clip_data.get("file", ""))
+            if not start_frame.is_file() or not end_frame.is_file() or not clip.is_file():
+                raise ValueError(f"Cannot resume: files for completed shot {expected_index} are missing")
+            current_end = end_frame
+            raw_clips.append(clip)
+            durations.append(float(record["duration_seconds"]))
+            for frame_path in (start_frame, end_frame):
+                try:
+                    frame_number = max(frame_number, int(frame_path.stem.rsplit("-", 1)[1]))
+                except (IndexError, ValueError):
+                    raise ValueError(f"Cannot resume: unexpected frame name {frame_path.name}")
+
+        def update_progress(stage: str, message: str, shot_index: int | None = None) -> None:
+            completed_seconds = sum(durations)
+            event = {
+                "stage": stage,
+                "message": message,
+                "shot_index": shot_index,
+                "completed_shots": len(raw_clips),
+                "total_shots": len(plan.shots),
+                "completed_seconds": completed_seconds,
+                "target_seconds": plan.target_duration_seconds,
+            }
+            metadata["progress"] = event
+            self._write_metadata(destination_path, metadata)
+            self._notify(progress_callback, event)
+
+        def ensure_not_cancelled() -> None:
+            if cancel_check is not None and cancel_check():
+                raise GenerationCancelled("Generation cancelled by the local user")
+
         try:
-            for shot in plan.shots:
+            update_progress("starting", "正在准备本地生成任务。")
+            for shot in plan.shots[len(completed_records):]:
+                ensure_not_cancelled()
                 shot_record: dict[str, Any] = {
                     "index": shot.index,
                     "duration_seconds": shot.duration_seconds,
                     "transition_from_previous": shot.transition_from_previous,
                 }
                 if current_end is None or shot.transition_from_previous == "cut":
-                    frame_number += 1
-                    start_frame, start_record = self._generate_start_frame(
-                        prompt=shot.start_frame_prompt,
-                        seed=base_seed + frame_number,
-                        width=width,
-                        height=height,
-                        frame_number=frame_number,
-                        destination=destination,
-                        run_id=run_id,
-                        timeout_seconds=image_timeout_seconds,
+                    update_progress(
+                        "start_frame",
+                        f"正在生成第 {shot.index}/{len(plan.shots)} 镜起始帧。",
+                        shot.index,
                     )
+                    frame_number += 1
+                    if reference_path is not None:
+                        start_frame, start_record = self._generate_reference_start_frame(
+                            source=reference_path,
+                            prompt=shot.start_frame_prompt,
+                            negative_prompt=plan.visual_bible.global_negative_prompt,
+                            aspect_ratio=plan.aspect_ratio,
+                            seed=base_seed + frame_number,
+                            frame_number=frame_number,
+                            destination=destination_path,
+                            run_id=run_id,
+                            timeout_seconds=image_timeout_seconds,
+                        )
+                    else:
+                        start_frame, start_record = self._generate_start_frame(
+                            prompt=shot.start_frame_prompt,
+                            seed=base_seed + frame_number,
+                            width=width,
+                            height=height,
+                            frame_number=frame_number,
+                            destination=destination_path,
+                            run_id=run_id,
+                            timeout_seconds=image_timeout_seconds,
+                        )
                     shot_record["start_frame_generation"] = start_record
                 else:
                     start_frame = current_end
                     shot_record["start_frame_generation"] = None
                 shot_record["start_frame"] = start_frame.name
 
+                ensure_not_cancelled()
+                update_progress(
+                    "end_frame",
+                    f"正在生成第 {shot.index}/{len(plan.shots)} 镜结束帧。",
+                    shot.index,
+                )
                 frame_number += 1
                 end_frame, end_record = self._generate_end_frame(
                     source=start_frame,
@@ -116,46 +293,83 @@ class StoryVideoExecutor:
                     negative_prompt=plan.visual_bible.global_negative_prompt,
                     seed=base_seed + frame_number,
                     frame_number=frame_number,
-                    destination=destination,
+                    destination=destination_path,
                     run_id=run_id,
                     timeout_seconds=image_timeout_seconds,
                 )
                 shot_record["end_frame"] = end_frame.name
                 shot_record["end_frame_generation"] = end_record
 
+                ensure_not_cancelled()
+                update_progress(
+                    "video",
+                    f"正在生成第 {shot.index}/{len(plan.shots)} 段视频。",
+                    shot.index,
+                )
                 clip, clip_record = self._generate_clip(
                     shot_index=shot.index,
                     first_frame=start_frame,
                     last_frame=end_frame,
-                    prompt=shot.video_prompt,
+                    prompt=prepare_h3_prompt(
+                        shot.video_prompt,
+                        duration_seconds=shot.duration_seconds,
+                        dialogue_mode=plan.dialogue_mode,
+                    ),
                     seed=base_seed + 10_000 + shot.index,
                     duration_seconds=shot.duration_seconds,
                     aspect_ratio=plan.aspect_ratio,
-                    destination=destination,
+                    destination=destination_path,
                     run_id=run_id,
                     timeout_seconds=video_timeout_seconds,
                 )
                 shot_record["clip"] = clip_record
                 metadata["shots"].append(shot_record)
-                self._write_metadata(destination, metadata)
                 raw_clips.append(clip)
                 durations.append(shot.duration_seconds)
                 current_end = end_frame
+                update_progress(
+                    "shot_completed",
+                    f"第 {shot.index}/{len(plan.shots)} 段视频已经完成。",
+                    shot.index,
+                )
 
-            final_path = destination / "final.mp4"
+            ensure_not_cancelled()
+            update_progress("remux", "正在拼接并校验最终视频。")
+            final_path = destination_path / "final.mp4"
             remux_segments(raw_clips, final_path, segment_seconds=durations)
             metadata["final_video"] = {
                 "file": final_path.name,
                 "duration_seconds": media_duration(final_path),
             }
             metadata["status"] = "succeeded"
-            self._write_metadata(destination, metadata)
-            return destination
+            update_progress("completed", "最终视频已经生成。")
+            self._write_metadata(destination_path, metadata)
+            return destination_path
+        except GenerationCancelled as exc:
+            metadata["status"] = "cancelled"
+            metadata["error"] = str(exc)
+            update_progress("cancelled", "任务已在当前模型步骤完成后停止。")
+            self._write_metadata(destination_path, metadata)
+            raise
         except Exception as exc:
             metadata["status"] = "failed"
             metadata["error"] = f"{type(exc).__name__}: {exc}"
-            self._write_metadata(destination, metadata)
+            update_progress("failed", metadata["error"])
+            self._write_metadata(destination_path, metadata)
             raise
+
+    @staticmethod
+    def _notify(
+        callback: Callable[[dict[str, Any]], None] | None,
+        event: dict[str, Any],
+    ) -> None:
+        if callback is None:
+            return
+        try:
+            callback(dict(event))
+        except Exception:
+            # A broken UI callback must never abort an expensive local render.
+            return
 
     def _generate_start_frame(
         self,
@@ -211,6 +425,45 @@ class StoryVideoExecutor:
         asset = self._single_asset(history, "469", "images")
         output = self.client.download_asset(asset, destination / f"frame-{frame_number:04d}.png")
         return output, self._generation_record("qwen-image-edit-2509", prompt_id, seed, asset)
+
+    def _generate_reference_start_frame(
+        self,
+        *,
+        source: Path,
+        prompt: str,
+        negative_prompt: str,
+        aspect_ratio: str,
+        seed: int,
+        frame_number: int,
+        destination: Path,
+        run_id: str,
+        timeout_seconds: float,
+    ) -> tuple[Path, dict[str, Any]]:
+        upload = self.client.upload_image(
+            source,
+            filename=f"{run_id}-reference{source.suffix.lower()}",
+            subfolder="cpw",
+        )
+        edit_prompt = (
+            "Use the uploaded image as the authoritative visual reference. Preserve the visible "
+            "subject identity, facial features, clothing, important objects, and visual style unless "
+            "the target scene explicitly requires a change. Recompose it as a new storyboard frame "
+            f"for a {aspect_ratio} canvas; extend or crop the background naturally. Target scene: {prompt}"
+        )
+        workflow = ComfyUIClient.apply_substitutions(load_workflow_template(self.qwen_edit_workflow), {
+            ("78", "image"): self.client.input_reference(upload),
+            ("433:111", "prompt"): edit_prompt,
+            ("433:110", "prompt"): negative_prompt,
+            ("433:3", "seed"): seed,
+            ("433:443", "value"): True,
+            ("469", "filename_prefix"): f"cpw_story_{run_id}_frame_{frame_number:04d}",
+        })
+        prompt_id, history = self.client.run(workflow, timeout_seconds=timeout_seconds)
+        asset = self._single_asset(history, "469", "images")
+        output = self.client.download_asset(asset, destination / f"frame-{frame_number:04d}.png")
+        return output, self._generation_record(
+            "qwen-image-edit-2509-reference-start", prompt_id, seed, asset
+        )
 
     def _generate_clip(
         self,

@@ -20,6 +20,7 @@ def _print_plan_summary(plan: StoryPlan, path: Path | None = None) -> None:
     print(f"Shots: {len(plan.shots)}")
     print(f"Estimated keyframes: {plan.estimated_frame_count}")
     print(f"Aspect ratio: {plan.aspect_ratio}")
+    print(f"Dialogue mode: {plan.dialogue_mode}")
 
 
 def _plan_destination(output_root: Path) -> Path:
@@ -44,6 +45,12 @@ def main() -> None:
         default="16:9",
     )
     parser.add_argument("--output-language", default="Chinese")
+    parser.add_argument(
+        "--dialogue-mode",
+        choices=["auto", "none", "dialogue"],
+        default="auto",
+        help="Let the planner decide dialogue, forbid speech, or require at least one exact line",
+    )
     parser.add_argument("--model", default=os.environ.get("LM_STUDIO_MODEL"))
     parser.add_argument(
         "--lm-studio",
@@ -112,6 +119,7 @@ def main() -> None:
             aspect_ratio=args.aspect_ratio,
             style=args.style,
             output_language=args.output_language,
+            dialogue_mode=args.dialogue_mode,
         )
         if not args.execute:
             destination = plan.write(_plan_destination(args.output_root))

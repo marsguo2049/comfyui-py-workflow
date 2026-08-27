@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Offline Story Studio</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">COMFYUI PY WORKFLOW · V0.5</p>
+      <h1>Offline Story Studio</h1>
+      <p class="subtitle">从本地故事和视觉素材到本地 AI 视频，全程不连接云端服务。</p>
+    </div>
+    <div class="offline-badge"><span></span>强制离线模式</div>
+  </header>
+
+  <main>
+    <section class="panel" id="services-panel">
+      <div class="section-heading">
+        <div><span class="step">01</span><h2>本机服务检查</h2></div>
+        <button class="secondary" id="refresh-services">重新检测</button>
+      </div>
+      <div class="service-settings">
+        <label>LM Studio 地址<input id="lm-url" value="http://127.0.0.1:1234/v1"></label>
+        <label>ComfyUI 地址<input id="comfy-url" value="http://127.0.0.1:8188"></label>
+        <label>本地文字模型<select id="lm-model"><option value="">等待检测</option></select></label>
+      </div>
+      <div class="status-grid">
+        <article class="status-card" id="lm-status"><strong>LM Studio</strong><p>尚未检测</p></article>
+        <article class="status-card" id="comfy-status"><strong>ComfyUI</strong><p>尚未检测</p></article>
+        <article class="status-card" id="ocr-status"><strong>离线文档</strong><p>尚未检测</p></article>
+      </div>
+      <p class="hint">推荐顺序：先用 LM Studio 分析并生成分镜，自动卸载文字模型后，再让 ComfyUI 开始生成。</p>
+    </section>
+
+    <section class="panel">
+      <div class="section-heading"><div><span class="step">02</span><h2>输入故事与素材</h2></div></div>
+      <div class="two-columns">
+        <div class="input-card">
+          <h3>上传本地文档</h3>
+          <p>支持 PDF、DOCX、Markdown 和 TXT，文件只复制到本机任务目录。</p>
+          <input type="file" id="story-file" accept=".pdf,.docx,.md,.markdown,.txt">
+          <button id="upload-story">创建本地项目</button>
+        </div>
+        <div class="input-card">
+          <h3>直接输入想法</h3>
+          <textarea id="story-text" rows="7" placeholder="例如：一名信使在暴雨夜穿过城市，把一封信交给多年未见的人……"></textarea>
+          <button id="create-text">用这段文字创建项目</button>
+        </div>
+      </div>
+      <div class="input-card reference-card">
+        <div>
+          <h3>单张视觉参考图（可选）</h3>
+          <p>支持 PNG、JPG/JPEG 和 WebP。图片只保存在项目目录中；生成新场景时由 Qwen Image Edit 直接读取，用来保持人物、服装、物件或画风。</p>
+          <input type="file" id="reference-image" accept="image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp">
+          <button class="secondary" id="attach-reference">添加或替换当前项目的参考图</button>
+        </div>
+        <div class="reference-preview-shell">
+          <img id="reference-preview" class="hidden" alt="当前参考图">
+          <p id="reference-status" class="hint">尚未选择参考图；不上传时保持原来的纯文字生成方式。</p>
+        </div>
+      </div>
+      <div class="project-picker">
+        <label>当前本地项目<select id="project-select"><option value="">尚未创建项目</option></select></label>
+        <span id="project-path"></span>
+      </div>
+    </section>
+
+    <section class="panel hidden" id="analysis-panel">
+      <div class="section-heading"><div><span class="step">03</span><h2>故事分析与时长建议</h2></div></div>
+      <div id="workflow-error" class="warnings hidden"></div>
+      <div id="analysis-empty" class="empty-state">
+        <p>LM Studio 将在本机读取故事，提取关键事件并推荐三个视频长度；参考图不会发送到云端。</p>
+        <button id="analyze-story">开始本地分析</button>
+      </div>
+      <div id="analysis-result" class="hidden">
+        <div class="analysis-summary">
+          <div><span>标题</span><strong id="analysis-title"></strong></div>
+          <div><span>类型</span><strong id="analysis-genre"></strong></div>
+          <p id="analysis-synopsis"></p>
+          <p class="reason" id="analysis-reason"></p>
+        </div>
+        <div id="duration-options" class="duration-grid"></div>
+        <div class="planning-settings">
+          <label>最终时长（秒）<input id="duration-seconds" type="number" min="15" max="180" step="5"></label>
+          <label>画面比例<select id="aspect-ratio"><option>16:9</option><option>9:16</option><option>1:1</option><option>4:3</option><option>3:4</option><option>21:9</option></select></label>
+          <label>台词策略
+            <select id="dialogue-mode">
+              <option value="auto">由模型判断（推荐）</option>
+              <option value="none">不要台词或旁白</option>
+              <option value="dialogue">需要台词或旁白</option>
+            </select>
+          </label>
+          <label class="wide">补充画风要求<input id="visual-style" placeholder="留空则由本地模型根据故事选择"></label>
+        </div>
+        <div class="button-row">
+          <button class="secondary" id="reanalyze-story">重新分析文档</button>
+          <button id="create-plan">确认时长，生成详细分镜</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel hidden" id="plan-panel">
+      <div class="section-heading"><div><span class="step">04</span><h2>确认详细分镜</h2></div></div>
+      <p class="hint">这里包含 Z-Image、Qwen Image Edit 和 H3 的全部提示词。若项目有参考图，每个独立新场景会从参考图生成起始帧；H3 台词必须使用 &lt;d&gt;[语言] 原文&lt;/d&gt;。</p>
+      <textarea id="plan-editor" class="code-editor" rows="24" spellcheck="false"></textarea>
+      <div class="button-row">
+        <button class="secondary" id="save-plan">保存并校验修改</button>
+        <button id="start-generation">第二次确认：开始生成</button>
+        <button class="danger hidden" id="cancel-generation">当前步骤后停止</button>
+      </div>
+    </section>
+
+    <section class="panel hidden" id="progress-panel">
+      <div class="section-heading"><div><span class="step">05</span><h2>生成进度</h2></div></div>
+      <div class="progress-shell"><div id="progress-bar"></div></div>
+      <div class="progress-copy">
+        <strong id="progress-percent">0%</strong>
+        <p id="progress-message">等待开始</p>
+      </div>
+      <div class="metrics" id="progress-metrics"></div>
+      <div id="warnings" class="warnings hidden"></div>
+    </section>
+
+    <section class="panel hidden" id="results-panel">
+      <div class="section-heading">
+        <div><span class="step">06</span><h2>本地结果</h2></div>
+        <button class="secondary" id="open-folder">打开输出文件夹</button>
+      </div>
+      <div id="final-video"></div>
+      <h3>关键帧</h3>
+      <div id="keyframe-gallery" class="gallery"></div>
+      <h3>视频片段</h3>
+      <div id="clip-list" class="clip-list"></div>
+    </section>
+  </main>
+
+  <div id="toast" role="status"></div>
+  <script src="/static/app.js"></script>
+</body>
+</html>

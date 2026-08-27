@@ -30,6 +30,55 @@ def test_structured_chat_parses_content(monkeypatch: pytest.MonkeyPatch) -> None
     assert result == {"answer": 3}
     assert captured["path"] == "/chat/completions"
     assert captured["payload"]["response_format"]["type"] == "json_schema"
+    assert captured["payload"]["reasoning_effort"] == "none"
+
+
+def test_structured_chat_reports_reasoning_exhaustion(monkeypatch: pytest.MonkeyPatch) -> None:
+    client = LMStudioClient()
+
+    def fake_request(path, *, method="GET", payload=None):
+        return {
+            "choices": [{
+                "finish_reason": "length",
+                "message": {"content": "", "reasoning_content": "still thinking"},
+            }],
+            "usage": {
+                "completion_tokens": 256,
+                "completion_tokens_details": {"reasoning_tokens": 256},
+            },
+        }
+
+    monkeypatch.setattr(client, "_request_json", fake_request)
+    with pytest.raises(LMStudioError, match="reasoning_tokens=256"):
+        client.structured_chat(
+            model="local/model",
+            messages=[{"role": "user", "content": "answer"}],
+            schema_name="answer",
+            schema={"type": "object"},
+        )
+
+
+def test_structured_chat_reports_invalid_json_with_finish_reason(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    client = LMStudioClient()
+
+    def fake_request(path, *, method="GET", payload=None):
+        return {
+            "choices": [{
+                "finish_reason": "length",
+                "message": {"content": '{"answer":'},
+            }]
+        }
+
+    monkeypatch.setattr(client, "_request_json", fake_request)
+    with pytest.raises(LMStudioError, match="finish_reason=length"):
+        client.structured_chat(
+            model="local/model",
+            messages=[{"role": "user", "content": "answer"}],
+            schema_name="answer",
+            schema={"type": "object"},
+        )
 
 
 def test_resolve_model_requires_choice_when_multiple(monkeypatch: pytest.MonkeyPatch) -> None:
