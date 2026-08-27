@@ -4,7 +4,7 @@ import json
 import math
 import uuid
 from dataclasses import asdict
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -65,7 +65,7 @@ class StoryVideoExecutor:
     ) -> Path:
         plan.validate()
         self.client.check_health()
-        run_id = f"{datetime.now(UTC).strftime('%Y%m%dT%H%M%SZ')}-{uuid.uuid4().hex[:8]}"
+        run_id = f"{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}-{uuid.uuid4().hex[:8]}"
         destination = Path(output_root) / run_id
         destination.mkdir(parents=True, exist_ok=False)
         plan.write(destination / "story-plan.json")

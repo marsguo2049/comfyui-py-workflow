@@ -3,7 +3,7 @@ from __future__ import annotations
 import argparse
 import os
 import uuid
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 from .documents import read_document
@@ -23,7 +23,7 @@ def _print_plan_summary(plan: StoryPlan, path: Path | None = None) -> None:
 
 
 def _plan_destination(output_root: Path) -> Path:
-    identifier = f"{datetime.now(UTC).strftime('%Y%m%dT%H%M%SZ')}-{uuid.uuid4().hex[:8]}"
+    identifier = f"{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}-{uuid.uuid4().hex[:8]}"
     return output_root / "plans" / identifier / "story-plan.json"
 
 
