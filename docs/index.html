@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="comfyui-py-workflow Offline Story Studio 的安全静态界面预览。">
+  <title>Offline Story Studio · UI Preview</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="preview-notice">
+    <span class="preview-dot" aria-hidden="true"></span>
+    <strong>静态预览</strong>
+    <span>此页面不上传文件、不连接模型，也不会生成媒体。</span>
+    <span class="notice-en">Static preview · no uploads, models, or backend calls.</span>
+  </div>
+
+  <header class="hero">
+    <nav aria-label="项目链接">
+      <a class="brand" href="#top" aria-label="Offline Story Studio 首页">
+        <span class="brand-mark">OS</span>
+        <span>Offline Story Studio</span>
+      </a>
+      <div class="nav-links">
+        <a href="#workflow">工作流程</a>
+        <a href="https://github.com/marsguo2049/comfyui-py-workflow">GitHub</a>
+        <a class="nav-primary" href="https://github.com/marsguo2049/comfyui-py-workflow#quick-start">本地运行</a>
+      </div>
+    </nav>
+
+    <div class="hero-copy" id="top">
+      <p class="eyebrow">COMFYUI PY WORKFLOW · OFFLINE-FIRST</p>
+      <h1>把一个故事，整理成<br><span>可执行的本地 AI 视频流程</span></h1>
+      <p class="hero-description">
+        导入 PDF、DOCX、Markdown 或文字，再选择一张参考图。程序在本机分析故事、建议时长、生成分镜，
+        经你两次确认后调用 ComfyUI，最后集中展示关键帧、片段和成片。
+      </p>
+      <div class="hero-actions">
+        <a class="button primary" href="#studio">查看界面预览</a>
+        <a class="button secondary" href="https://github.com/marsguo2049/comfyui-py-workflow">查看源代码</a>
+      </div>
+      <ul class="trust-list" aria-label="项目特点">
+        <li>本地文档</li>
+        <li>本地模型</li>
+        <li>人工确认后执行</li>
+      </ul>
+    </div>
+  </header>
+
+  <main id="studio">
+    <section class="studio-shell" aria-labelledby="studio-title">
+      <div class="window-bar">
+        <div class="window-dots" aria-hidden="true"><i></i><i></i><i></i></div>
+        <span>127.0.0.1:7860</span>
+        <span class="local-pill">仅本机</span>
+      </div>
+
+      <div class="studio-header">
+        <div>
+          <p class="eyebrow">OFFLINE STORY STUDIO · UI PREVIEW</p>
+          <h2 id="studio-title">从故事与素材到本地 AI 视频</h2>
+          <p>下面使用完全虚构的公开示例展示实际操作结构。</p>
+        </div>
+        <div class="offline-badge"><span></span>强制离线模式</div>
+      </div>
+
+      <section class="panel">
+        <div class="section-heading">
+          <div><span class="step">01</span><h3>本机服务检查</h3></div>
+          <button type="button" disabled>重新检测</button>
+        </div>
+        <div class="service-grid">
+          <article class="service-card ok">
+            <div><span class="service-icon">LM</span><strong>LM Studio</strong></div>
+            <p><span class="status-dot"></span>已连接 · 本地文字模型可用</p>
+          </article>
+          <article class="service-card ok">
+            <div><span class="service-icon">CU</span><strong>ComfyUI</strong></div>
+            <p><span class="status-dot"></span>已连接 · 工作流检查通过</p>
+          </article>
+          <article class="service-card ok">
+            <div><span class="service-icon">DOC</span><strong>离线文档</strong></div>
+            <p><span class="status-dot"></span>PDF / DOCX / MD / TXT</p>
+          </article>
+        </div>
+        <p class="hint">推荐顺序：先让 LM Studio 完成分析与分镜，再卸载文字模型并启动 ComfyUI 渲染，降低显存压力。</p>
+      </section>
+
+      <section class="panel">
+        <div class="section-heading">
+          <div><span class="step">02</span><h3>输入故事与素材</h3></div>
+          <span class="sample-label">公开虚构示例</span>
+        </div>
+        <div class="input-grid">
+          <div class="story-card">
+            <label for="story-preview">故事构想</label>
+            <div id="story-preview" class="story-preview" role="textbox" aria-readonly="true">
+              暴雨将至，一名城市快递员接到当天最后一单：把一只旧怀表送到港口钟表店。
+              路上他发现怀表仍在走动，而收件人似乎已经等了很多年……
+            </div>
+            <div class="file-row"><span class="file-icon">MD</span><span><strong>last-delivery.md</strong><small>文本已在本机读取</small></span><em>18 KB</em></div>
+          </div>
+          <div class="reference-card">
+            <p class="field-label">单张视觉参考图（可选）</p>
+            <div class="reference-placeholder" aria-label="参考图占位预览">
+              <div class="photo-glyph"><span></span></div>
+              <strong>参考图预览</strong>
+              <small>用于保持人物、物件或画风</small>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel analysis-panel">
+        <div class="section-heading">
+          <div><span class="step">03</span><h3>故事分析与时长建议</h3></div>
+          <span class="complete"><i></i>本地分析完成</span>
+        </div>
+        <div class="analysis-summary">
+          <div><span>标题</span><strong>最后一单</strong></div>
+          <div><span>类型</span><strong>都市奇遇 / 氛围短片</strong></div>
+          <p>围绕“接单—穿城—抵达—交付”展开，以怀表作为连续视觉线索。</p>
+        </div>
+        <div class="duration-grid">
+          <article><strong>精简版 · 30 秒</strong><span>6 段视频 · 节奏紧凑</span></article>
+          <article class="selected"><b>推荐</b><strong>推荐版 · 45 秒</strong><span>9 段视频 · 叙事与成本平衡</span></article>
+          <article><strong>完整版 · 70 秒</strong><span>14 段视频 · 更多环境与反应</span></article>
+        </div>
+        <div class="settings-row">
+          <div><span>最终时长</span><strong>45 秒</strong></div>
+          <div><span>画面比例</span><strong>16:9</strong></div>
+          <div><span>台词策略</span><strong>由模型判断</strong></div>
+          <button type="button" disabled>确认时长，生成分镜</button>
+        </div>
+      </section>
+
+      <section class="panel progress-panel">
+        <div class="section-heading">
+          <div><span class="step">05</span><h3>生成进度</h3></div>
+          <span class="complete"><i></i>示例任务完成</span>
+        </div>
+        <div class="progress-copy"><strong>100%</strong><span>已生成关键帧、视频片段和最终成片</span></div>
+        <div class="progress-track"><i></i></div>
+        <div class="metric-row"><span>9 个镜头</span><span>12 张关键帧</span><span>9 个片段</span><span>1 个最终视频</span></div>
+      </section>
+    </section>
+
+    <section class="workflow" id="workflow">
+      <div class="section-intro">
+        <p class="eyebrow">HOW IT WORKS</p>
+        <h2>一次输入，两次确认，本地完成</h2>
+        <p>规划和渲染分开执行，适合显存有限的个人电脑，也让昂贵的生成任务始终由用户决定何时开始。</p>
+      </div>
+      <ol class="workflow-list">
+        <li><span>1</span><div><strong>输入故事与素材</strong><p>读取本地文档或直接输入想法，可附一张参考图。</p></div></li>
+        <li><span>2</span><div><strong>本地规划并确认</strong><p>LM Studio 建议时长、镜头和模型专用提示词。</p></div></li>
+        <li><span>3</span><div><strong>ComfyUI 逐段生成</strong><p>按确认后的计划生成关键帧、首尾帧视频与成片。</p></div></li>
+        <li><span>4</span><div><strong>查看本地结果</strong><p>在浏览器预览媒体，并可直接跳转到输出目录。</p></div></li>
+      </ol>
+    </section>
+  </main>
+
+  <footer>
+    <div><strong>comfyui-py-workflow</strong><span>Independent community project · Not affiliated with Comfy Org</span></div>
+    <a href="https://github.com/marsguo2049/comfyui-py-workflow">GitHub Repository →</a>
+  </footer>
+  <script>
+    if (new URLSearchParams(window.location.search).has("capture")) {
+      document.body.classList.add("capture");
+    }
+  </script>
+</body>
+</html>

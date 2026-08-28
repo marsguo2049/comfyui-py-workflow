@@ -8,6 +8,12 @@
 
 > 这是一个独立的社区项目，与 Comfy Org 没有隶属或官方认可关系。
 
+## 界面预览
+
+[![Offline Story Studio 静态界面预览](docs/assets/offline-story-studio-preview.png)](https://marsguo2049.github.io/comfyui-py-workflow/)
+
+[打开完整尺寸的静态预览页](https://marsguo2049.github.io/comfyui-py-workflow/)。页面使用完全虚构的公开示例说明本地工作流程，不会上传文件、请求模型或连接后端；真正运行项目仍需双击 `start-local-ui.bat`。
+
 ## 包含内容
 
 - 基于 Python 标准库的小型本地 ComfyUI HTTP 客户端。
@@ -102,6 +108,7 @@ cpw-story-video --plan outputs/story-video/plans/计划编号/story-plan.json --
 - `workflows/ui`：可编辑的 ComfyUI 画布工作流。
 - `examples/bicycle-sequence`：可运行示例和脱敏媒体。
 - `examples/auto-story-video`：本地 LM Studio 自动分镜示例。
+- `docs`：经过隐私检查、由 GitHub Pages 发布的静态界面预览。
 - `tests`：离线客户端、工作流与隐私检查。
 
 ## 测试

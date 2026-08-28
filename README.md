@@ -8,6 +8,12 @@ This repository focuses on execution infrastructure rather than model-routing re
 
 > This is an independent community project and is not affiliated with or endorsed by Comfy Org.
 
+## UI preview
+
+[![Offline Story Studio static UI preview](docs/assets/offline-story-studio-preview.png)](https://marsguo2049.github.io/comfyui-py-workflow/)
+
+[Open the interactive-size static preview](https://marsguo2049.github.io/comfyui-py-workflow/). It demonstrates the local workflow with a fictional public sample and makes no uploads, model requests, or backend calls. Run `start-local-ui.bat` for the working local application.
+
 ## What it includes
 
 - A small standard-library HTTP client for local ComfyUI.
@@ -139,6 +145,7 @@ The [bicycle sequence](examples/bicycle-sequence/README.md) contains three keyfr
 - `workflows/ui`: editable ComfyUI canvas exports.
 - `examples/bicycle-sequence`: runnable example and sanitized media.
 - `examples/auto-story-video`: local LM Studio planning example.
+- `docs`: privacy-safe static UI preview published with GitHub Pages.
 - `tests`: offline client, workflow, and privacy checks.
 
 ## Tests
