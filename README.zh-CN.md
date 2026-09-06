@@ -8,7 +8,11 @@
 
 > 这是一个独立的社区项目，与 Comfy Org 没有隶属或官方认可关系。
 
-## 界面预览
+## 统一工作台
+
+双击 `start-local-ui.bat`，在同一个 Offline Studio 中切换 **故事视频 / 批量工具 / 服务设置**。批量图片编辑支持多选、文件夹与拖放、共享提示词、进度、历史任务、原图查看和结果下载；高级参数默认折叠。界面适配窄屏，服务仍仅绑定本机地址。
+
+## 历史界面预览
 
 [![Offline Story Studio 静态界面预览](docs/assets/offline-story-studio-preview.png)](https://marsguo2049.github.io/comfyui-py-workflow/)
 
@@ -18,6 +22,7 @@
 
 - 基于 Python 标准库的小型本地 ComfyUI HTTP 客户端。
 - 图片上传、任务提交、运行历史轮询、输出识别和文件下载。
+- Offline Studio 内置 Qwen Image Edit 批量工具，可对多个文件或整个文件夹统一执行图片修改；旧桌面入口仍可通过 Python 模块使用。
 - 两帧图片链：Z-Image Turbo → Qwen Image Edit 2509。
 - 三帧视频链：Qwen 生成第 3 帧 → MiniMax H3 生成两段首尾帧视频 → 拼接为 10 秒 MP4。
 - 用于脚本自动化的 API 工作流和用于可视化编辑的 UI 工作流。
@@ -44,6 +49,8 @@ Z-Image 生成第 1 帧
 ```powershell
 python -m pip install -e ".[all]"
 ```
+
+批量编辑已有图片时，先启动 ComfyUI，然后在 Offline Studio 选择“批量工具”，或双击 `start-batch-image-edit-ui.bat` 直接进入。结果按任务保存在 `outputs/offline-studio/batch-jobs/`；详细说明见 [`BATCH_IMAGE_EDIT_UI.zh-CN.md`](BATCH_IMAGE_EDIT_UI.zh-CN.md)。
 
 在 `http://127.0.0.1:8188` 启动 ComfyUI，安装文档列出的模型和自定义节点，然后运行完整示例：
 

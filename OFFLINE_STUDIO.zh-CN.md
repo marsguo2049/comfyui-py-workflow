@@ -1,4 +1,10 @@
-# Offline Story Studio v0.5
+# Offline Studio
+
+统一入口包含“故事视频”“批量工具”“服务设置”。故事视频保留原来的分析、分镜确认和生成流程；Qwen 批量图片编辑使用同一个本地页面和 ComfyUI 地址，详见 [批量工具说明](BATCH_IMAGE_EDIT_UI.zh-CN.md)。
+
+界面使用浅色布局和响应式导航，小窗口会自动改为单列。移动适配指页面布局，不会开放局域网访问；手机不能直接连接另一台电脑的回环地址。
+
+后续批量功能可复用 `batch_studio.py` 的任务存储、上传、进度、停止与媒体访问接口，并在 `BATCH_TOOLS` 中声明工具。新增工具还需实现对应执行器、参数界面与验证，不能只添加菜单项。
 
 Offline Story Studio 是 `comfyui-py-workflow` 的纯本地操作页面。它把故事文档、单张视觉参考图、LM Studio 分镜、ComfyUI 关键帧与视频生成，以及最终结果预览放在同一个本机页面中。
 

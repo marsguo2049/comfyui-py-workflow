@@ -3,23 +3,35 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Offline Story Studio</title>
+  <title>Offline Studio · 本地创作工作台</title>
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
+  <aside class="sidebar">
+    <a class="brand" href="#story"><span class="brand-mark">O</span><span>Offline Studio<small>本地创作工作台</small></span></a>
+    <p class="nav-caption">工作区</p>
+    <nav aria-label="工作区">
+      <button class="nav-item active" data-view="story" aria-current="page"><span aria-hidden="true">▤</span>故事视频</button>
+      <button class="nav-item" data-view="batch"><span aria-hidden="true">▦</span>批量工具</button>
+      <button class="nav-item" data-view="settings"><span aria-hidden="true">⚙</span>服务设置</button>
+    </nav>
+    <div class="sidebar-footer"><span class="local-dot"></span>在本机处理与保存<small>ComfyUI Py Workflow</small></div>
+  </aside>
+  <div class="workspace">
   <header class="topbar">
     <div>
-      <p class="eyebrow">COMFYUI PY WORKFLOW · V0.5</p>
-      <h1>Offline Story Studio</h1>
-      <p class="subtitle">从本地故事和视觉素材到本地 AI 视频，全程不连接云端服务。</p>
+      <p class="eyebrow" id="view-eyebrow">STORY TO VIDEO</p>
+      <h1 id="view-title">把故事，变成画面。</h1>
+      <p class="subtitle" id="view-subtitle">从一个想法开始，在本机完成分镜与视频。</p>
     </div>
-    <div class="offline-badge"><span></span>强制离线模式</div>
+    <button class="offline-badge" id="go-settings"><span></span>本机服务 <span id="service-summary">检测中</span></button>
   </header>
 
   <main>
+    <div id="view-settings" class="hidden">
     <section class="panel" id="services-panel">
       <div class="section-heading">
-        <div><span class="step">01</span><h2>本机服务检查</h2></div>
+        <div><h2>连接本机服务</h2></div>
         <button class="secondary" id="refresh-services">重新检测</button>
       </div>
       <div class="service-settings">
@@ -34,13 +46,15 @@
       </div>
       <p class="hint">推荐顺序：先用 LM Studio 分析并生成分镜，自动卸载文字模型后，再让 ComfyUI 开始生成。</p>
     </section>
-
+    </div>
+    <div id="view-story">
+    <div class="workflow-strip"><span class="active">1　输入故事</span><span>2　分析与分镜</span><span>3　生成与导出</span></div>
     <section class="panel">
-      <div class="section-heading"><div><span class="step">02</span><h2>输入故事与素材</h2></div></div>
+      <div class="section-heading"><div><h2>开始一个故事</h2></div><span class="hint">文档或文字，任选一种</span></div>
       <div class="two-columns">
         <div class="input-card">
           <h3>上传本地文档</h3>
-          <p>支持 PDF、DOCX、Markdown 和 TXT，文件只复制到本机任务目录。</p>
+          <p>PDF、DOCX、Markdown 或 TXT</p>
           <input type="file" id="story-file" accept=".pdf,.docx,.md,.markdown,.txt">
           <button id="upload-story">创建本地项目</button>
         </div>
@@ -50,6 +64,7 @@
           <button id="create-text">用这段文字创建项目</button>
         </div>
       </div>
+      <details class="reference-details"><summary>视觉参考图 <span class="hint">可选 · 保持人物与画风一致</span></summary>
       <div class="input-card reference-card">
         <div>
           <h3>单张视觉参考图（可选）</h3>
@@ -62,6 +77,7 @@
           <p id="reference-status" class="hint">尚未选择参考图；不上传时保持原来的纯文字生成方式。</p>
         </div>
       </div>
+      </details>
       <div class="project-picker">
         <label>当前本地项目<select id="project-select"><option value="">尚未创建项目</option></select></label>
         <span id="project-path"></span>
@@ -135,9 +151,51 @@
       <h3>视频片段</h3>
       <div id="clip-list" class="clip-list"></div>
     </section>
+    </div>
+    <div id="view-batch" class="hidden">
+      <div class="tool-strip"><label>选择批量工具<select id="batch-tool"><option value="image-edit">批量图片编辑</option></select></label><p id="batch-tool-description">用同一段提示词，逐张修改图片。</p><span class="tag">Qwen Image Edit 2509</span></div>
+      <div class="batch-layout">
+        <section class="panel batch-compose">
+          <div class="section-heading"><div><h2>图片与修改要求</h2></div><button class="secondary" id="batch-new">新建任务</button></div>
+          <div id="batch-inputs">
+            <div id="batch-drop" class="drop-zone">
+              <span class="drop-icon" aria-hidden="true">＋</span><h3>把图片放到这里</h3><p>拖入图片，或选择多个文件 / 整个文件夹</p>
+              <div class="button-row"><label class="file-button">选择图片<input id="batch-files" type="file" accept=".png,.jpg,.jpeg,.webp,.bmp,.gif,.tif,.tiff" multiple></label><label class="file-button secondary">选择文件夹<input id="batch-folder" type="file" webkitdirectory multiple></label></div>
+              <small>最多 200 张 · 单张 25 MB · 合计 500 MB</small>
+            </div>
+            <div class="selection-heading"><span id="batch-selection-count">尚未添加图片</span><button class="text-button" id="batch-clear">清空</button></div>
+            <div id="batch-selection" class="selection-list"></div>
+            <label class="prompt-label">想如何修改？<textarea id="batch-prompt" rows="4" maxlength="20000" placeholder="例如：把背景换成浅灰色摄影棚，保留主体和自然阴影。所有图片都会使用这段要求。"></textarea></label>
+            <details class="advanced"><summary>高级参数 <span class="hint">负向提示词、种子、超时与工作流</span></summary><div class="advanced-fields">
+              <label>负向提示词<textarea id="batch-negative" rows="2" placeholder="不希望出现的内容（可选）"></textarea></label>
+              <div class="two-columns"><label>基础种子<input id="batch-seed" type="number" min="0" max="9007199254740792" value="43"></label><label>单张超时（秒）<input id="batch-timeout" type="number" min="1" max="86400" value="900"></label></div>
+              <label class="checkbox-label"><input id="batch-increment" type="checkbox" checked>每张图片种子 +1</label>
+              <label>自定义 API 工作流路径<input id="batch-workflow" placeholder="留空使用内置 Qwen Image Edit 2509"></label>
+              <p class="hint">自定义工作流需兼容现有 Qwen 节点。输出按任务单独保存，不会覆盖原图。</p>
+            </div></details>
+          </div>
+          <div class="run-footer"><p class="hint">仅需 ComfyUI，无需启动 LM Studio。</p><button id="batch-start">开始批量处理 <span aria-hidden="true">→</span></button></div>
+          <p id="batch-error" class="warnings hidden" role="alert"></p>
+        </section>
+        <aside class="batch-aside">
+          <section class="panel"><div class="section-heading"><div><h2>当前任务</h2></div><span class="tag" id="batch-status">待开始</span></div>
+            <p id="batch-message" role="status">添加图片和修改要求，开始第一批处理。</p>
+            <progress id="batch-progress" max="100" value="0" aria-label="批量任务进度"></progress>
+            <div class="batch-stats"><div><strong id="batch-completed">0/0</strong><span>已处理</span></div><div><strong id="batch-succeeded">0</strong><span>成功</span></div><div><strong id="batch-failed">0</strong><span>失败</span></div></div>
+            <div class="button-row"><button class="danger hidden" id="batch-cancel">当前图片后停止</button><button class="secondary hidden" id="batch-open">打开任务文件夹</button></div>
+          </section>
+          <section class="panel"><div class="section-heading"><div><h2>最近任务</h2></div><button class="text-button" id="batch-refresh">刷新</button></div><div id="batch-history" class="history-list"><p class="hint">还没有批量任务</p></div></section>
+          <p class="aside-note">任务与结果保存在本机。关闭页面不会停止正在运行的任务，重新打开即可查看。</p>
+        </aside>
+      </div>
+      <section class="panel"><div class="section-heading"><div><h2>处理结果</h2></div><span class="hint">点击图片查看原尺寸，或下载结果</span></div><div id="batch-results" class="batch-results"><div class="empty-results"><span aria-hidden="true">▧</span><p>处理后的图片会出现在这里</p><small>每完成一张，自动更新一张。</small></div></div></section>
+    </div>
   </main>
+  <footer class="page-footer">OFFLINE STUDIO <span>创作留在本机。</span></footer>
+  </div>
 
   <div id="toast" role="status"></div>
   <script src="/static/app.js"></script>
+  <script src="/static/batch.js"></script>
 </body>
 </html>

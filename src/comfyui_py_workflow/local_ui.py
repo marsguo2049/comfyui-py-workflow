@@ -15,6 +15,7 @@ from urllib.parse import parse_qs, unquote, urlparse
 
 from .offline import LOOPBACK_HOSTS
 from .studio import OfflineStudio
+from .batch_studio import BATCH_TOOLS, MAX_FILE_BYTES, BatchStudio
 
 
 WEB_ROOT = Path(__file__).with_name("web")
@@ -54,6 +55,7 @@ def parse_byte_range(value: str | None, size: int) -> tuple[int, int] | None:
 
 class StudioRequestHandler(BaseHTTPRequestHandler):
     studio: OfflineStudio
+    batch: BatchStudio
     server_version = "CPWOfflineStudio/0.5"
 
     def do_GET(self) -> None:
@@ -67,6 +69,21 @@ class StudioRequestHandler(BaseHTTPRequestHandler):
                 return
             if parsed.path == "/api/projects":
                 self._send_json({"projects": self.studio.list_projects()})
+                return
+            if parsed.path == "/api/batch/tools":
+                self._send_json({"tools": BATCH_TOOLS})
+                return
+            if parsed.path == "/api/batch/jobs":
+                self._send_json({"jobs": self.batch.list_jobs()})
+                return
+            if parsed.path == "/api/batch/job":
+                self._send_json(self.batch.get(self._query(parsed, "id")))
+                return
+            if parsed.path.startswith("/batch-media/"):
+                parts = parsed.path.split("/", 3)
+                if len(parts) != 4:
+                    raise ValueError("Invalid batch media URL")
+                self._send_media_file(self.batch.media_path(unquote(parts[2]), unquote(parts[3])))
                 return
             if parsed.path == "/api/project":
                 project_id = self._query(parsed, "id")
@@ -93,6 +110,11 @@ class StudioRequestHandler(BaseHTTPRequestHandler):
         parsed = urlparse(self.path)
         try:
             self._check_origin()
+            if parsed.path == "/api/batch/upload":
+                self._send_json(self.batch.upload(
+                    self._query(parsed, "id"), self._query(parsed, "filename"),
+                    self._read_body(max_bytes=MAX_FILE_BYTES)), status=201)
+                return
             if parsed.path == "/api/project/file":
                 filename = self._query(parsed, "filename")
                 data = self._read_body(max_bytes=100 * 1024 * 1024)
@@ -109,7 +131,16 @@ class StudioRequestHandler(BaseHTTPRequestHandler):
                 return
 
             body = self._read_json()
-            if parsed.path == "/api/project/text":
+            if parsed.path == "/api/batch/create":
+                self._send_json(self.batch.create(str(body.get("kind", "image-edit"))), status=201)
+            elif parsed.path == "/api/batch/start":
+                self._send_json(self.batch.start(str(body["id"]), body), status=202)
+            elif parsed.path == "/api/batch/cancel":
+                self._send_json(self.batch.cancel(str(body["id"])))
+            elif parsed.path == "/api/batch/open-folder":
+                self.batch.open_folder(str(body["id"]))
+                self._send_json({"ok": True})
+            elif parsed.path == "/api/project/text":
                 result = self.studio.create_text_project(
                     str(body.get("text", "")),
                     str(body.get("filename", "story.md")),
@@ -274,11 +305,12 @@ class StudioRequestHandler(BaseHTTPRequestHandler):
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Run the fully local Offline Story Studio UI")
+    parser = argparse.ArgumentParser(description="Run the fully local Offline Studio UI")
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=7860)
     parser.add_argument("--project-root", type=Path)
     parser.add_argument("--no-browser", action="store_true")
+    parser.add_argument("--view", choices=["story", "batch", "settings"], default="story")
     args = parser.parse_args()
     if args.host.lower() not in LOOPBACK_HOSTS:
         parser.error("Offline mode only permits a loopback --host")
@@ -292,12 +324,13 @@ def main() -> None:
             f"Offline Story Studio could not start on {args.host}:{args.port}. "
             f"Another instance may already be running ({exc}).\n",
         )
+    StudioRequestHandler.batch = BatchStudio(StudioRequestHandler.studio.project_root / "batch-jobs")
     url = f"http://{args.host}:{args.port}"
     print(f"Offline Story Studio: {url}")
     print(f"Projects: {StudioRequestHandler.studio.project_root.resolve()}")
     print("Only loopback connections are accepted. Press Ctrl+C to stop.")
     if not args.no_browser:
-        threading.Timer(0.8, lambda: webbrowser.open(url)).start()
+        threading.Timer(0.8, lambda: webbrowser.open(f"{url}/#{args.view}")).start()
     try:
         server.serve_forever()
     except KeyboardInterrupt:

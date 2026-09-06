@@ -26,6 +26,10 @@ function jsonPost(path, body) {
   });
 }
 
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, char => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[char]));
+}
+
 async function busy(button, action) {
   const old = button.textContent;
   button.disabled = true;
@@ -49,6 +53,7 @@ async function refreshServices() {
     const comfy = encodeURIComponent($('#comfy-url').value.trim());
     const result = await api(`/api/status?lm=${lm}&comfy=${comfy}`);
     state.services = result;
+    $('#service-summary').textContent = result.comfyui.ok ? 'ComfyUI 就绪' : '待连接';
     serviceCard('#lm-status', result.lm_studio);
     serviceCard('#comfy-status', result.comfyui);
     const caps = result.capabilities;
@@ -168,7 +173,10 @@ function renderAnalysis(analysis) {
     const node = document.createElement('article');
     node.className = `duration-option ${option.key === 'recommended' ? 'selected' : ''}`;
     node.dataset.seconds = option.seconds;
-    node.innerHTML = `<strong>${option.label} · ${option.seconds} 秒</strong><small>${option.shot_count} 段视频 · 约 ${option.estimated_keyframes} 张关键帧 · 预计 ${option.estimated_render_minutes} 分钟</small><p>${option.description}</p>`;
+    node.innerHTML = `<strong>${escapeHtml(option.label)} · ${escapeHtml(option.seconds)} 秒</strong><small>${escapeHtml(option.shot_count)} 段视频 · 约 ${escapeHtml(option.estimated_keyframes)} 张关键帧 · 预计 ${escapeHtml(option.estimated_render_minutes)} 分钟</small><p>${escapeHtml(option.description)}</p>`;
+    node.tabIndex = 0;
+    node.setAttribute('role', 'button');
+    node.onkeydown = event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); node.click(); } };
     node.onclick = () => {
       document.querySelectorAll('.duration-option').forEach(item => item.classList.remove('selected'));
       node.classList.add('selected');
@@ -193,7 +201,7 @@ function renderProgress(payload) {
   if (progress.total_shots) metrics.push(`镜头 ${progress.completed_shots || 0}/${progress.total_shots}`);
   if (target) metrics.push(`成片 ${completed}/${target} 秒`);
   metrics.push(`状态 ${project.status}`);
-  $('#progress-metrics').innerHTML = metrics.map(value => `<span>${value}</span>`).join('');
+  $('#progress-metrics').innerHTML = metrics.map(value => `<span>${escapeHtml(value)}</span>`).join('');
   const warnings = project.warnings || [];
   $('#warnings').classList.toggle('hidden', !warnings.length && !project.error);
   $('#warnings').textContent = [...warnings, project.error].filter(Boolean).join('\n');

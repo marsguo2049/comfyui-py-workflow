@@ -31,6 +31,7 @@ cpw-image-sequence = "comfyui_py_workflow.image_sequence:main"
 cpw-video-sequence = "comfyui_py_workflow.video_sequence:main"
 cpw-story-video = "comfyui_py_workflow.auto_story_video:main"
 cpw-local-ui = "comfyui_py_workflow.local_ui:main"
+cpw-batch-image-edit-ui = "comfyui_py_workflow.batch_edit_ui:main"
 
 [project.urls]
 Repository = "https://github.com/marsguo2049/comfyui-py-workflow"

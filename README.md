@@ -8,7 +8,11 @@ This repository focuses on execution infrastructure rather than model-routing re
 
 > This is an independent community project and is not affiliated with or endorsed by Comfy Org.
 
-## UI preview
+## Unified workspace
+
+Run `start-local-ui.bat` to switch between **Story video / Batch tools / Service settings** in Offline Studio. Batch image editing includes multi-file and folder selection, drag and drop, shared prompts, progress, persistent job history, and image downloads. Advanced settings are collapsed by default. The responsive UI remains loopback-only.
+
+## Previous UI preview
 
 [![Offline Story Studio static UI preview](docs/assets/offline-story-studio-preview.png)](https://marsguo2049.github.io/comfyui-py-workflow/)
 
@@ -18,6 +22,7 @@ This repository focuses on execution infrastructure rather than model-routing re
 
 - A small standard-library HTTP client for local ComfyUI.
 - Image upload, prompt submission, history polling, output discovery, and artifact download.
+- Integrated Qwen Image Edit batch tools with persistent local jobs; the legacy desktop UI remains available as a Python module.
 - A two-frame chain: Z-Image Turbo → Qwen Image Edit 2509.
 - A three-frame video chain: Qwen frame 3 → two MiniMax H3 first/last-frame clips → one ten-second MP4.
 - API-format graphs for automation and UI-format graphs for visual editing.
@@ -46,6 +51,12 @@ Install the project with document and media support:
 ```powershell
 python -m pip install -e ".[all]"
 ```
+
+For batch editing existing images, start ComfyUI and double-click
+`start-batch-image-edit-ui.bat` to open the Studio's Batch tools workspace. It accepts multiple files or a folder, applies
+one shared prompt, and stores each job under `outputs/offline-studio/batch-jobs/`. See the
+[Chinese batch UI guide](BATCH_IMAGE_EDIT_UI.zh-CN.md). Only edit images you own
+or are authorized to modify.
 
 For the offline browser UI, double-click `start-local-ui.bat` on Windows or run:
 
