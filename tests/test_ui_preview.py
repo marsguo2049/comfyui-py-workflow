@@ -82,6 +82,9 @@ def test_story_preview_stages_are_unlocked_and_grouped():
     for item, stage in [('story-text', 'input'), ('analysis-panel', 'plan'), ('plan-panel', 'plan'),
                         ('progress-panel', 'output'), ('results-panel', 'output')]:
         assert ('div', f'story-stage-{stage}') in page.containers[item]
-    assert not any((tag, key) == ('div', 'view-story') for tag, key in page.containers['view-batch'])
+    for view in ['view-comic', 'view-batch', 'view-settings']:
+        assert ('div', 'view-story') not in page.containers[view]
+    assert ('div', 'view-comic') in page.containers['comic-plan-panel']
+    assert ('div', 'view-comic') in page.containers['comic-results']
     for name in ['bicycle-frame-0001.png', 'bicycle-frame-0002.png', 'bicycle-frame-0003.png', 'bicycle-final-10s.mp4']:
         assert (ROOT / 'docs/assets' / name).read_bytes() == (ROOT / 'examples/bicycle-sequence/assets' / name).read_bytes()

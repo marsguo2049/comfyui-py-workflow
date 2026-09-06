@@ -1,6 +1,7 @@
 // Presentation only. Never import the real app scripts or contact a backend.
 const $ = selector => document.querySelector(selector);
 const views = {
+  comic: ['STORY TO COMIC', '让故事，一格格展开。', '从文字到连续画面，在本机完成你的漫画。'],
   story: ['STORY TO VIDEO', '把故事，变成画面。', '从一个想法开始，在本机完成分镜与视频。'],
   batch: ['BATCH TOOLS', '一次设定，批量完成。', '重复的图片处理，交给本地工作流。'],
   settings: ['LOCAL SERVICES', '连接你的创作引擎。', '统一管理本机服务，供各个工作区使用。'],
@@ -107,4 +108,42 @@ $('#batch-history').append(historyRow);
 for (const id of ['lm-status', 'comfy-status', 'ocr-status']) $(`#${id} p`).textContent = '预览模式，不检测本机服务。';
 $('#lm-model').options[0].textContent = '本地模型（示例）';
 document.querySelectorAll('button:disabled, input:disabled, textarea:disabled, select:disabled').forEach(node => node.title = '仅展示。实际处理请在本机运行 Offline Studio。');
+// Fixed public demonstration data; no local comic records or API calls.
+$('#comic-story').value = '一位骑手离开小镇，沿着乡间公路骑行，在山脚停下看日落。\n\n（公开虚构故事；下方使用仓库已有单车样图演示排版。）';
+$('#comic-count').value = 3;
+$('#comic-aspect').value = '16:9';
+$('#comic-style').value = '清晰线条，柔和色彩，乡间旅行漫画';
+$('#comic-title').value = '骑向黄昏';
+$('#comic-bible').value = '同一位骑手与同一辆单车；保持头盔、服装和车架颜色一致。';
+$('#comic-plan-style').value = $('#comic-style').value;
+$('#comic-negative').value = '文字、水印、多格拼贴、人物重复';
+$('#comic-plan-panel').classList.remove('hidden');
+$('#comic-status').textContent = '公开示例';
+$('#comic-message').textContent = '分镜为虚构示例；图片是已有公开样图，并非本次漫画模型生成结果。';
+$('#comic-metrics').textContent = '3 格排版示例';
+$('#comic-results').replaceChildren();
+$('#comic-history').textContent = '公开预览不读取本机漫画历史。';
+$('#comic-exports').textContent = '本地生成后可下载独立 HTML 阅读页，以及包含图片和分镜的 ZIP。';
+for (const [index, description, prompt, caption, dialogue] of [
+  [1, '骑手从小镇出发。', 'Single comic panel, a cyclist leaving a quiet town, soft morning light.', '天刚亮，他就出发了。', '骑手：今天，去看看山的另一边。'],
+  [2, '沿公路继续前进，保持人物与单车一致。', 'Keep the same cyclist and bicycle, riding along a country road, side view.', '公路渐渐安静下来。', ''],
+  [3, '来到山脚，停车欣赏远景。', 'Keep the same cyclist and bicycle, stopped near the hills at sunset.', '有时候，抵达只需要停下来。', '骑手：这里就很好。'],
+]) {
+  const card = document.createElement('article'); card.className = 'comic-panel-editor';
+  const title = document.createElement('h3'); title.textContent = `第 ${index} 格`; card.append(title);
+  for (const [name, value] of [['这一格发生什么', description], ['画面提示词', prompt], ['旁白', caption], ['对白', dialogue]]) {
+    const label = document.createElement('label'); label.textContent = name;
+    const input = document.createElement('textarea'); input.disabled = true; input.rows = 2; input.value = value; label.append(input); card.append(label);
+  }
+  const reference = document.createElement('p'); reference.className = 'hint'; reference.textContent = index === 1 ? '首格：根据文字生成' : '画面参考：上一格';
+  card.append(reference); $('#comic-panels').append(card);
+  const figure = document.createElement('figure'); figure.className = 'comic-frame';
+  const img = document.createElement('img'); img.src = `assets/bicycle-frame-000${index}.png`; img.alt = `公开单车样图 ${index}，用于排版展示`; img.loading = 'lazy';
+  const text = document.createElement('figcaption');
+  const heading = document.createElement('strong'); heading.textContent = `第 ${index} 格 · 排版示例`; text.append(heading);
+  for (const [field, value] of [['caption', caption], ['dialogue', dialogue]]) {
+    const paragraph = document.createElement('p'); paragraph.className = `comic-${field}`; paragraph.textContent = value; text.append(paragraph);
+  }
+  figure.append(img, text); $('#comic-results').append(figure);
+}
 showRoute();

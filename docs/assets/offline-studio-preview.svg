@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1440" height="960" viewBox="0 0 1440 960" role="img" aria-labelledby="title desc">
 <title id="title">Offline Studio unified workspace overview</title>
-<desc id="desc">Light workspace with Story video, Batch tools and Service settings navigation. The batch view shows sample files, a shared prompt, progress and history. UI illustration with fictional examples, not a live job.</desc>
+<desc id="desc">Light workspace with Story video, Story comic, Batch tools and Service settings navigation. The batch view shows sample files, a shared prompt, progress and history. UI illustration with fictional examples, not a live job.</desc>
 <style>text { font-family: "Segoe UI", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif; } .muted { fill: #707887; }</style>
 <rect x="0" y="0" width="1440" height="960" rx="0" fill="#f7f8fa" stroke="none"/>
 <rect x="0" y="0" width="1440" height="44" rx="0" fill="#eef0ff" stroke="none"/>
@@ -15,11 +15,13 @@
 <text x="30" y="170" font-size="13" fill="#9299a7" font-weight="400">工作区</text>
 <text x="35" y="216" font-size="14" fill="#9299a7" font-weight="400">01</text>
 <text x="72" y="216" font-size="16" fill="#707887" font-weight="400">故事视频</text>
-<rect x="16" y="236" width="192" height="48" rx="8" fill="#eef0ff" stroke="none"/>
-<text x="35" y="267" font-size="14" fill="#525ce5" font-weight="400">02</text>
-<text x="72" y="267" font-size="16" fill="#525ce5" font-weight="650">批量工具</text>
-<text x="35" y="319" font-size="14" fill="#9299a7" font-weight="400">03</text>
-<text x="72" y="319" font-size="16" fill="#707887" font-weight="400">服务设置</text>
+<text x="35" y="267" font-size="14" fill="#9299a7" font-weight="400">02</text>
+<text x="72" y="267" font-size="16" fill="#707887" font-weight="400">故事漫画</text>
+<rect x="16" y="288" width="192" height="48" rx="8" fill="#eef0ff" stroke="none"/>
+<text x="35" y="319" font-size="14" fill="#525ce5" font-weight="400">03</text>
+<text x="72" y="319" font-size="16" fill="#525ce5" font-weight="650">批量工具</text>
+<text x="35" y="371" font-size="14" fill="#9299a7" font-weight="400">04</text>
+<text x="72" y="371" font-size="16" fill="#707887" font-weight="400">服务设置</text>
 <text x="28" y="897" font-size="13" fill="#707887" font-weight="400">● 在本机处理与保存</text>
 <text x="28" y="923" font-size="12" fill="#9299a7" font-weight="400">ComfyUI Py Workflow</text>
 <text x="264" y="92" font-size="12" fill="#9299a7" font-weight="600">BATCH TOOLS</text>

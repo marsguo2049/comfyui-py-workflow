@@ -16,6 +16,7 @@ from urllib.parse import parse_qs, unquote, urlparse
 from .offline import LOOPBACK_HOSTS
 from .studio import OfflineStudio
 from .batch_studio import BATCH_TOOLS, MAX_FILE_BYTES, BatchStudio
+from .comic_studio import ComicStudio
 
 
 WEB_ROOT = Path(__file__).with_name("web")
@@ -56,6 +57,7 @@ def parse_byte_range(value: str | None, size: int) -> tuple[int, int] | None:
 class StudioRequestHandler(BaseHTTPRequestHandler):
     studio: OfflineStudio
     batch: BatchStudio
+    comic: ComicStudio
     server_version = "CPWOfflineStudio/0.5"
 
     def do_GET(self) -> None:
@@ -69,6 +71,18 @@ class StudioRequestHandler(BaseHTTPRequestHandler):
                 return
             if parsed.path == "/api/projects":
                 self._send_json({"projects": self.studio.list_projects()})
+                return
+            if parsed.path == "/api/comic/jobs":
+                self._send_json({"jobs": self.comic.list_jobs()})
+                return
+            if parsed.path == "/api/comic/job":
+                self._send_json(self.comic.get(self._query(parsed, "id")))
+                return
+            if parsed.path.startswith("/comic-media/"):
+                parts = parsed.path.split("/", 3)
+                if len(parts) != 4:
+                    raise ValueError("Invalid comic media URL")
+                self._send_media_file(self.comic.media_path(unquote(parts[2]), unquote(parts[3])))
                 return
             if parsed.path == "/api/batch/tools":
                 self._send_json({"tools": BATCH_TOOLS})
@@ -110,6 +124,14 @@ class StudioRequestHandler(BaseHTTPRequestHandler):
         parsed = urlparse(self.path)
         try:
             self._check_origin()
+            if parsed.path == "/api/comic/file":
+                self._send_json(self.comic.create(filename=self._query(parsed, "filename"),
+                    data=self._read_body(max_bytes=100 * 1024 * 1024)), status=201)
+                return
+            if parsed.path == "/api/comic/reference":
+                self._send_json(self.comic.attach_reference(self._query(parsed, "id"),
+                    self._read_body(max_bytes=MAX_FILE_BYTES)), status=201)
+                return
             if parsed.path == "/api/batch/upload":
                 self._send_json(self.batch.upload(
                     self._query(parsed, "id"), self._query(parsed, "filename"),
@@ -131,7 +153,20 @@ class StudioRequestHandler(BaseHTTPRequestHandler):
                 return
 
             body = self._read_json()
-            if parsed.path == "/api/batch/create":
+            if parsed.path == "/api/comic/create":
+                self._send_json(self.comic.create(str(body.get("text", ""))), status=201)
+            elif parsed.path == "/api/comic/plan":
+                self._send_json(self.comic.plan(str(body["id"]), body), status=202)
+            elif parsed.path == "/api/comic/save-plan":
+                self._send_json(self.comic.save_plan(str(body["id"]), body.get("plan"), int(body["revision"])))
+            elif parsed.path == "/api/comic/start":
+                self._send_json(self.comic.start(str(body["id"]), body), status=202)
+            elif parsed.path == "/api/comic/cancel":
+                self._send_json(self.comic.cancel(str(body["id"])))
+            elif parsed.path == "/api/comic/open-folder":
+                self.comic.open_folder(str(body["id"]))
+                self._send_json({"ok": True})
+            elif parsed.path == "/api/batch/create":
                 self._send_json(self.batch.create(str(body.get("kind", "image-edit"))), status=201)
             elif parsed.path == "/api/batch/start":
                 self._send_json(self.batch.start(str(body["id"]), body), status=202)
@@ -188,6 +223,12 @@ class StudioRequestHandler(BaseHTTPRequestHandler):
     def do_HEAD(self) -> None:
         parsed = urlparse(self.path)
         try:
+            if parsed.path.startswith("/comic-media/"):
+                parts = parsed.path.split("/", 3)
+                if len(parts) != 4:
+                    raise ValueError("Invalid comic media URL")
+                self._send_media_file(self.comic.media_path(unquote(parts[2]), unquote(parts[3])), head_only=True)
+                return
             if parsed.path.startswith("/media/"):
                 parts = parsed.path.split("/", 3)
                 if len(parts) != 4:
@@ -310,7 +351,7 @@ def main() -> None:
     parser.add_argument("--port", type=int, default=7860)
     parser.add_argument("--project-root", type=Path)
     parser.add_argument("--no-browser", action="store_true")
-    parser.add_argument("--view", choices=["story", "batch", "settings"], default="story")
+    parser.add_argument("--view", choices=["story", "comic", "batch", "settings"], default="story")
     args = parser.parse_args()
     if args.host.lower() not in LOOPBACK_HOSTS:
         parser.error("Offline mode only permits a loopback --host")
@@ -325,6 +366,7 @@ def main() -> None:
             f"Another instance may already be running ({exc}).\n",
         )
     StudioRequestHandler.batch = BatchStudio(StudioRequestHandler.studio.project_root / "batch-jobs")
+    StudioRequestHandler.comic = ComicStudio(StudioRequestHandler.studio.project_root / "comic-jobs")
     url = f"http://{args.host}:{args.port}"
     print(f"Offline Story Studio: {url}")
     print(f"Projects: {StudioRequestHandler.studio.project_root.resolve()}")

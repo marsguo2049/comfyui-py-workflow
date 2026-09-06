@@ -5,7 +5,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Offline Studio</title>
-  <meta name="description" content="Offline Studio 统一工作台预览：故事视频、批量图片编辑与本机服务设置。使用虚构示例，无上传或模型请求。">
+  <meta name="description" content="Offline Studio 统一工作台预览：故事漫画、故事视频、批量图片编辑与本机服务设置。使用公开示例，无上传或模型请求。">
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; media-src 'self'; connect-src 'none'; form-action 'none'; base-uri 'none'">
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="preview.css">
@@ -18,6 +18,7 @@
     <p class="nav-caption">工作区</p>
     <nav aria-label="工作区">
       <button class="nav-item active" data-view="story" aria-current="page"><span aria-hidden="true">▤</span>故事视频</button>
+      <button class="nav-item" data-view="comic"><span aria-hidden="true">▥</span>故事漫画</button>
       <button class="nav-item" data-view="batch"><span aria-hidden="true">▦</span>批量工具</button>
       <button class="nav-item" data-view="settings"><span aria-hidden="true">⚙</span>服务设置</button>
     </nav>
@@ -160,6 +161,64 @@
       <div id="clip-list" class="clip-list"><p class="hint">本地运行后，此处列出逐段生成的视频。本预览提供上方合成样片供查看。</p></div>
     </section>
     </div>
+    </div>
+    <div id="view-comic" class="hidden">
+      <div class="workflow-strip"><span class="active">1　输入故事</span><span>2　审阅分镜</span><span>3　生成与阅读</span></div>
+      <div class="batch-layout">
+        <section class="panel">
+          <div class="section-heading"><div><h2>把故事画成漫画</h2></div><button disabled class="secondary" id="comic-new">新建漫画</button></div>
+          <div id="comic-source-fields">
+            <label>故事内容<textarea disabled id="comic-story" rows="5" maxlength="120000" placeholder="写下人物、事件和结局。模型会把故事拆成独立分格，保持叙事顺序。"></textarea></label>
+            <label class="comic-file-label">或选择故事文档<input disabled id="comic-file" type="file" accept=".txt,.md,.markdown,.docx,.pdf"></label>
+            <p class="hint" id="comic-source-note">选择文档时以文档为准；内容只保存在本机。</p>
+            <details class="advanced"><summary>人物参考图 <span class="hint">可选 · 统一人物与画风</span></summary>
+              <label class="comic-file-label">PNG / JPEG / WebP · 最多 25 MB<input disabled id="comic-reference" type="file" accept=".png,.jpg,.jpeg,.webp"></label>
+              <p class="hint">参考图会居中裁切到选定画幅，请尽量使用相同比例并将主体放在中央。</p>
+              <img id="comic-reference-preview" class="hidden" alt="漫画人物参考图">
+            </details>
+          </div>
+          <div class="planning-settings comic-options" id="comic-planning-fields">
+            <label>漫画格数<input disabled id="comic-count" type="number" min="2" max="16" value="6"></label>
+            <label>每格画幅<select disabled id="comic-aspect"><option value="3:4">3:4 竖幅</option><option value="1:1">1:1 方形</option><option value="4:3">4:3 横幅</option><option value="16:9">16:9 宽幅</option><option value="9:16">9:16 长竖幅</option></select></label>
+            <label class="comic-wide">画风要求<input disabled id="comic-style" value="清晰漫画线稿，柔和色彩，人物与服装保持一致" maxlength="1000"></label>
+            <label class="checkbox-label comic-wide"><input disabled id="comic-unload" type="checkbox" checked>分镜完成后卸载文字模型，给生图腾出显存</label>
+          </div>
+          <div class="run-footer"><p class="hint">分镜使用 LM Studio；生图使用 Z-Image / Qwen。</p><button disabled id="comic-plan">生成漫画分镜 →</button></div>
+          <p class="warnings hidden" id="comic-error" role="alert"></p>
+        </section>
+        <aside class="batch-aside">
+          <section class="panel"><div class="section-heading"><div><h2>当前漫画</h2></div><span class="tag" id="comic-status">待开始</span></div>
+            <p id="comic-message" role="status">输入故事，先生成可审阅的分镜。</p>
+            <progress id="comic-progress" max="100" value="0" aria-label="漫画生成进度"></progress>
+            <p class="hint" id="comic-metrics">尚未生成分格</p>
+            <p class="warnings hidden" id="comic-warnings"></p>
+            <div class="button-row"><button disabled class="danger hidden" id="comic-cancel">当前步骤后停止</button><button disabled class="secondary hidden" id="comic-open">打开漫画文件夹</button></div>
+          </section>
+          <section class="panel"><div class="section-heading"><div><h2>最近漫画</h2></div><button disabled class="text-button" id="comic-refresh">刷新</button></div><div id="comic-history" class="history-list"><p class="hint">还没有漫画项目</p></div></section>
+          <p class="aside-note">先审阅分镜，再生成图片。中断后可以继续；已完成图片会保留在本机。</p>
+        </aside>
+      </div>
+      <section id="comic-plan-panel" class="panel hidden">
+        <div class="section-heading"><div><h2>审阅漫画分镜</h2></div><span id="comic-dirty" class="hint">已保存</span></div>
+        <div id="comic-plan-fields">
+          <label>漫画标题<input disabled id="comic-title" maxlength="120"></label>
+          <details class="advanced"><summary>统一设定 <span class="hint">人物、画风和负向提示词</span></summary><div class="advanced-fields">
+            <label>人物与连续性设定<textarea disabled id="comic-bible" rows="3" maxlength="4000"></textarea></label>
+            <label>统一画风<input disabled id="comic-plan-style" maxlength="1000"></label>
+            <label>负向提示词<textarea disabled id="comic-negative" rows="2" maxlength="2000"></textarea></label>
+          </div></details>
+          <div id="comic-panels" class="comic-plan-grid"></div>
+        </div>
+        <p class="hint">旁白和对白会排在图片下方，不让模型直接绘制中文。修改画面提示词后，该格及后续图片会重新生成；仅修改文字可直接更新阅读页。</p>
+        <div class="button-row"><button disabled class="secondary" id="comic-save">保存分镜修改</button></div>
+        <details class="advanced"><summary>生成参数</summary><div class="planning-settings comic-options"><label>基础种子<input disabled id="comic-seed" type="number" min="0" max="9007199254740975" value="1000"></label><label>单格超时（秒）<input disabled id="comic-timeout" type="number" min="1" max="86400" value="900"></label></div></details>
+        <div class="run-footer"><p class="hint">首次无参考图用 Z-Image，后续用 Qwen 保持连续性。</p><button disabled id="comic-generate">确认分镜，生成漫画 →</button></div>
+      </section>
+      <section class="panel" id="comic-results-panel">
+        <div class="section-heading"><div><h2>漫画阅读与导出</h2></div><div id="comic-exports" class="button-row"></div></div>
+        <p class="hint">全部完成后可下载独立 HTML 阅读页和图片 ZIP；阅读页支持用浏览器打印为 PDF。</p>
+        <div id="comic-results" class="comic-reader"><div class="empty-results">每完成一格，就会出现在这里。</div></div>
+      </section>
     </div>
     <div id="view-batch" class="hidden">
       <div class="tool-strip"><label>选择批量工具<select disabled id="batch-tool"><option value="image-edit">批量图片编辑</option></select></label><p id="batch-tool-description">用同一段提示词，逐张修改图片。</p><span class="tag">Qwen Image Edit 2509</span></div>

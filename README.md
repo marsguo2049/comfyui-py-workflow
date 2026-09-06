@@ -10,13 +10,15 @@ This repository focuses on execution infrastructure rather than model-routing re
 
 ## Unified workspace
 
-Run `start-local-ui.bat` to switch between **Story video / Batch tools / Service settings** in Offline Studio. Batch image editing includes multi-file and folder selection, drag and drop, shared prompts, progress, persistent job history, and image downloads. Advanced settings are collapsed by default. The responsive UI remains loopback-only.
+Run `start-local-ui.bat` to switch between **Story video / Story comic / Batch tools / Service settings** in Offline Studio. Batch image editing includes multi-file and folder selection, drag and drop, shared prompts, progress, persistent job history, and image downloads. Advanced settings are collapsed by default. The responsive UI remains loopback-only.
+
+**Story comic** turns a story into 2–16 editable panels using LM Studio, Z-Image and Qwen Image Edit. Review character settings and panel prompts, generate connected images, resume interrupted jobs or redo from a selected panel, then export an HTML reader and ZIP. Captions and dialogue are typeset below each image. See the [comic preview](https://marsguo2049.github.io/comfyui-py-workflow/#comic) and [Chinese guide](STORY_COMIC.zh-CN.md).
 
 ## UI preview
 
 [![Offline Studio unified workspace overview: batch image editing, story video, and service settings](docs/assets/offline-studio-preview.svg)](https://marsguo2049.github.io/comfyui-py-workflow/#batch)
 
-[Open the current UI preview](https://marsguo2049.github.io/comfyui-py-workflow/#batch) and switch between **Batch tools**, **Story video**, and **Service settings**. The overview illustration above and the responsive preview use fictional public examples. The preview shares the local application's layout and styles; file selection, generation, and backend connections are disabled. Run `start-local-ui.bat` for the working application.
+[Open the current UI preview](https://marsguo2049.github.io/comfyui-py-workflow/#batch) and switch between **Story comic**, **Batch tools**, **Story video**, and **Service settings**. The overview illustration above and the responsive preview use public examples. The comic view pairs fictional text with existing bicycle sample images to demonstrate layout; it is not a newly generated comic. The preview shares the local application's layout and styles; file selection, generation, and backend connections are disabled. Run `start-local-ui.bat` for the working application.
 
 To keep the preview aligned after UI changes, run `python scripts/build_ui_preview.py`. CI checks that the generated preview is up to date.
 

@@ -10,13 +10,15 @@
 
 ## 统一工作台
 
-双击 `start-local-ui.bat`，在同一个 Offline Studio 中切换 **故事视频 / 批量工具 / 服务设置**。批量图片编辑支持多选、文件夹与拖放、共享提示词、进度、历史任务、原图查看和结果下载；高级参数默认折叠。界面适配窄屏，服务仍仅绑定本机地址。
+双击 `start-local-ui.bat`，在同一个 Offline Studio 中切换 **故事视频 / 故事漫画 / 批量工具 / 服务设置**。批量图片编辑支持多选、文件夹与拖放、共享提示词、进度、历史任务、原图查看和结果下载；高级参数默认折叠。界面适配窄屏，服务仍仅绑定本机地址。
+
+**故事漫画**将故事拆为 2–16 格，复用 LM Studio、Z-Image 与 Qwen Image Edit。可审阅人物设定和逐格提示词、连续生图、断点继续、从指定格重做，并导出独立 HTML 阅读页和 ZIP 图片包。旁白与对白排在画面下方。查看[漫画界面预览](https://marsguo2049.github.io/comfyui-py-workflow/#comic)和[使用说明](STORY_COMIC.zh-CN.md)。
 
 ## 界面预览
 
 [![Offline Studio 统一工作台概览：批量图片编辑、故事视频与服务设置](docs/assets/offline-studio-preview.svg)](https://marsguo2049.github.io/comfyui-py-workflow/#batch)
 
-[打开当前界面预览](https://marsguo2049.github.io/comfyui-py-workflow/#batch)，可切换 **批量工具 / 故事视频 / 服务设置**。上方概览示意图与响应式预览页均使用公开虚构示例；预览页与本地应用共用布局和样式，文件选择、生成操作和后台连接均已禁用。真正运行项目请双击 `start-local-ui.bat`。
+[打开当前界面预览](https://marsguo2049.github.io/comfyui-py-workflow/#batch)，可切换 **故事漫画 / 批量工具 / 故事视频 / 服务设置**。概览示意图与预览页均使用公开示例；漫画页以虚构文字搭配已有单车样图演示排版，不是新生成的漫画作品。预览页与本地应用共用布局和样式，文件选择、生成操作和后台连接均已禁用。真正运行项目请双击 `start-local-ui.bat`。
 
 修改本地 UI 后，运行 `python scripts/build_ui_preview.py` 即可同步预览页。CI 会检查生成内容是否保持同步。
 
