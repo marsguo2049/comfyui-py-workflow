@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="960" viewBox="0 0 1440 960" role="img" aria-labelledby="title desc">
+<title id="title">Offline Studio unified workspace overview</title>
+<desc id="desc">Light workspace with Story video, Batch tools and Service settings navigation. The batch view shows sample files, a shared prompt, progress and history. UI illustration with fictional examples, not a live job.</desc>
+<style>text { font-family: "Segoe UI", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif; } .muted { fill: #707887; }</style>
+<rect x="0" y="0" width="1440" height="960" rx="0" fill="#f7f8fa" stroke="none"/>
+<rect x="0" y="0" width="1440" height="44" rx="0" fill="#eef0ff" stroke="none"/>
+<text x="26" y="28" font-size="13" fill="#525ce5" font-weight="700">OFFLINE STUDIO</text>
+<text x="225" y="28" font-size="13" fill="#707887" font-weight="400">界面概览 · 公开虚构示例</text>
+<text x="1070" y="28" font-size="13" fill="#525ce5" font-weight="400">本地创作 / 批量处理 / 统一入口</text>
+<rect x="0" y="44" width="224" height="916" rx="0" fill="#ffffff" stroke="none"/>
+<rect x="22" y="76" width="36" height="36" rx="11" fill="#525ce5" stroke="none"/>
+<text x="30" y="104" font-size="27" fill="#ffffff" font-weight="400">O</text>
+<text x="70" y="92" font-size="18" fill="#202733" font-weight="700">Offline Studio</text>
+<text x="70" y="113" font-size="12" fill="#707887" font-weight="400">本地创作工作台</text>
+<text x="30" y="170" font-size="13" fill="#9299a7" font-weight="400">工作区</text>
+<text x="35" y="216" font-size="14" fill="#9299a7" font-weight="400">01</text>
+<text x="72" y="216" font-size="16" fill="#707887" font-weight="400">故事视频</text>
+<rect x="16" y="236" width="192" height="48" rx="8" fill="#eef0ff" stroke="none"/>
+<text x="35" y="267" font-size="14" fill="#525ce5" font-weight="400">02</text>
+<text x="72" y="267" font-size="16" fill="#525ce5" font-weight="650">批量工具</text>
+<text x="35" y="319" font-size="14" fill="#9299a7" font-weight="400">03</text>
+<text x="72" y="319" font-size="16" fill="#707887" font-weight="400">服务设置</text>
+<text x="28" y="897" font-size="13" fill="#707887" font-weight="400">● 在本机处理与保存</text>
+<text x="28" y="923" font-size="12" fill="#9299a7" font-weight="400">ComfyUI Py Workflow</text>
+<text x="264" y="92" font-size="12" fill="#9299a7" font-weight="600">BATCH TOOLS</text>
+<text x="264" y="140" font-size="34" fill="#202733" font-weight="700">一次设定，批量完成。</text>
+<text x="264" y="173" font-size="15" fill="#707887" font-weight="400">重复的图片处理，交给本地工作流。</text>
+<rect x="1210" y="104" width="190" height="36" rx="18" fill="#ffffff" stroke="#e3e6ec"/>
+<text x="1227" y="127" font-size="13" fill="#707887" font-weight="400">● 本机服务 · 仅展示</text>
+<text x="264" y="213" font-size="12" fill="#707887" font-weight="400">选择批量工具</text>
+<rect x="264" y="225" width="224" height="42" rx="8" fill="#ffffff" stroke="#e3e6ec"/>
+<text x="280" y="253" font-size="16" fill="#202733" font-weight="600">批量图片编辑</text>
+<text x="459" y="252" font-size="16" fill="#707887" font-weight="400">⌄</text>
+<text x="508" y="252" font-size="14" fill="#707887" font-weight="400">用同一段提示词，逐张修改图片。</text>
+<rect x="1190" y="228" width="210" height="30" rx="5" fill="#eef0f5" stroke="none"/>
+<text x="1203" y="249" font-size="13" fill="#707887" font-weight="400">Qwen Image Edit 2509</text>
+<rect x="264" y="291" width="754" height="518" rx="12" fill="#ffffff" stroke="#e3e6ec"/>
+<text x="288" y="331" font-size="19" fill="#202733" font-weight="650">图片与修改要求</text>
+<rect x="905" y="307" width="90" height="34" rx="7" fill="#ffffff" stroke="#e3e6ec"/>
+<text x="920" y="329" font-size="13" fill="#707887" font-weight="400">新建任务</text>
+<rect x="288" y="358" width="706" height="158" rx="10" fill="#fafbff" stroke="#cdd1e7"/>
+<text x="624" y="395" font-size="30" fill="#737be8" font-weight="400">＋</text>
+<text x="574" y="425" font-size="17" fill="#202733" font-weight="600">把图片放到这里</text>
+<text x="482" y="452" font-size="14" fill="#707887" font-weight="400">拖入图片，或选择多个文件 / 整个文件夹</text>
+<rect x="516" y="467" width="115" height="34" rx="7" fill="#eef0ff" stroke="#dfe2fa"/>
+<text x="542" y="490" font-size="14" fill="#525ce5" font-weight="400">选择图片</text>
+<rect x="643" y="467" width="128" height="34" rx="7" fill="#ffffff" stroke="#e3e6ec"/>
+<text x="669" y="490" font-size="14" fill="#707887" font-weight="400">选择文件夹</text>
+<text x="288" y="545" font-size="13" fill="#707887" font-weight="400">已添加 3 张图片 · 示例</text>
+<text x="962" y="545" font-size="13" fill="#707887" font-weight="400">清空</text>
+<text x="288" y="574" font-size="13" fill="#707887" font-weight="400">product-front.png     product-side.png     product-detail.png</text>
+<text x="288" y="612" font-size="16" fill="#202733" font-weight="600">想如何修改？</text>
+<rect x="288" y="627" width="706" height="70" rx="8" fill="#ffffff" stroke="#e3e6ec"/>
+<text x="304" y="655" font-size="15" fill="#707887" font-weight="400">把背景换成浅灰色摄影棚，保留主体和自然阴影。</text>
+<text x="288" y="727" font-size="14" fill="#202733" font-weight="400">›  高级参数</text>
+<text x="397" y="727" font-size="13" fill="#9299a7" font-weight="400">负向提示词、种子、超时与工作流</text>
+<path d="M288 745H994" stroke="#e3e6ec"/>
+<text x="288" y="783" font-size="13" fill="#9299a7" font-weight="400">仅需 ComfyUI，无需启动 LM Studio。</text>
+<rect x="813" y="759" width="181" height="34" rx="7" fill="#525ce5" stroke="none"/>
+<text x="836" y="782" font-size="14" fill="#ffffff" font-weight="600">开始批量处理 →</text>
+<rect x="1038" y="291" width="362" height="230" rx="12" fill="#ffffff" stroke="#e3e6ec"/>
+<text x="1062" y="330" font-size="17" fill="#202733" font-weight="650">当前任务</text>
+<rect x="1324" y="308" width="52" height="26" rx="5" fill="#f1f3f7" stroke="none"/>
+<text x="1332" y="326" font-size="12" fill="#707887" font-weight="400">待开始</text>
+<text x="1062" y="372" font-size="13" fill="#707887" font-weight="400">添加图片和修改要求，开始第一批处理。</text>
+<rect x="1062" y="399" width="314" height="6" rx="3" fill="#eff0f6" stroke="none"/>
+<text x="1062" y="453" font-size="27" fill="#202733" font-weight="600">0/3</text>
+<text x="1062" y="481" font-size="13" fill="#9299a7" font-weight="400">已处理</text>
+<text x="1180" y="453" font-size="27" fill="#202733" font-weight="600">0</text>
+<text x="1180" y="481" font-size="13" fill="#9299a7" font-weight="400">成功</text>
+<text x="1297" y="453" font-size="27" fill="#202733" font-weight="600">0</text>
+<text x="1297" y="481" font-size="13" fill="#9299a7" font-weight="400">失败</text>
+<rect x="1038" y="541" width="362" height="202" rx="12" fill="#ffffff" stroke="#e3e6ec"/>
+<text x="1062" y="579" font-size="17" fill="#202733" font-weight="650">最近任务</text>
+<text x="1347" y="579" font-size="13" fill="#707887" font-weight="400">刷新</text>
+<path d="M1062 599H1376" stroke="#e3e6ec"/>
+<text x="1062" y="630" font-size="14" fill="#202733" font-weight="400">图片编辑 · 示例任务</text>
+<text x="1062" y="657" font-size="13" fill="#9299a7" font-weight="400">统一商品图背景 · 3 张图片</text>
+<text x="1062" y="713" font-size="13" fill="#707887" font-weight="400">任务历史与处理结果集中查看</text>
+<text x="1046" y="777" font-size="13" fill="#9299a7" font-weight="400">任务和结果保存在本机。</text>
+<text x="1046" y="802" font-size="13" fill="#9299a7" font-weight="400">关闭页面后，也可以回来继续查看。</text>
+<rect x="264" y="829" width="1136" height="90" rx="12" fill="#ffffff" stroke="#e3e6ec"/>
+<text x="288" y="866" font-size="17" fill="#202733" font-weight="650">处理结果</text>
+<text x="460" y="866" font-size="14" fill="#9299a7" font-weight="400">每完成一张，自动更新一张。</text>
+<text x="288" y="894" font-size="13" fill="#707887" font-weight="400">查看原图 / 下载结果 / 打开任务文件夹</text>
+<text x="264" y="945" font-size="11" fill="#a6adba" font-weight="400">OFFLINE STUDIO</text>
+<text x="1190" y="945" font-size="12" fill="#9299a7" font-weight="400">界面示意 · 非真实任务</text>
+</svg>

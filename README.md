@@ -12,11 +12,13 @@ This repository focuses on execution infrastructure rather than model-routing re
 
 Run `start-local-ui.bat` to switch between **Story video / Batch tools / Service settings** in Offline Studio. Batch image editing includes multi-file and folder selection, drag and drop, shared prompts, progress, persistent job history, and image downloads. Advanced settings are collapsed by default. The responsive UI remains loopback-only.
 
-## Previous UI preview
+## UI preview
 
-[![Offline Story Studio static UI preview](docs/assets/offline-story-studio-preview.png)](https://marsguo2049.github.io/comfyui-py-workflow/)
+[![Offline Studio unified workspace overview: batch image editing, story video, and service settings](docs/assets/offline-studio-preview.svg)](https://marsguo2049.github.io/comfyui-py-workflow/#batch)
 
-[Open the interactive-size static preview](https://marsguo2049.github.io/comfyui-py-workflow/). It demonstrates the local workflow with a fictional public sample and makes no uploads, model requests, or backend calls. Run `start-local-ui.bat` for the working local application.
+[Open the current UI preview](https://marsguo2049.github.io/comfyui-py-workflow/#batch) and switch between **Batch tools**, **Story video**, and **Service settings**. The overview illustration above and the responsive preview use fictional public examples. The preview shares the local application's layout and styles; file selection, generation, and backend connections are disabled. Run `start-local-ui.bat` for the working application.
+
+To keep the preview aligned after UI changes, run `python scripts/build_ui_preview.py`. CI checks that the generated preview is up to date.
 
 ## What it includes
 

@@ -1,0 +1,18 @@
+/* The main stylesheet is generated from the local UI. Only preview framing lives here. */
+body { padding-top: 44px; }
+.preview-notice { position: fixed; top: 0; left: 0; right: 0; z-index: 30; min-height: 44px; display: flex; align-items: center; gap: 16px; padding: 10px 24px; background: #eef0ff; color: #707887; border-bottom: 1px solid #dfe2fa; font-size: 12px; }
+.preview-notice strong { color: #525ce5; }
+.preview-notice a { margin-left: auto; text-decoration: none; white-space: nowrap; font-weight: 600; }
+.sidebar { top: 44px; }
+.no-script { margin: 20px 24px 20px 248px; }
+input:disabled, textarea:disabled, select:disabled { opacity: .8; cursor: default; }
+button:disabled { cursor: default; }
+.preview-example { color: #707887; font-size: 12px; overflow-wrap: anywhere; padding: 10px 0; border-bottom: 1px solid #eff0f5; }
+@media (max-width: 760px) {
+  body { padding-top: 64px; }
+  .preview-notice { min-height: 64px; padding: 8px 16px; gap: 4px 10px; flex-wrap: wrap; font-size: 11px; }
+  .preview-notice > span { flex-basis: calc(100% - 80px); }
+  .preview-notice a { margin-left: 0; }
+  .sidebar { top: 64px; }
+  .no-script { margin: 16px; }
+}

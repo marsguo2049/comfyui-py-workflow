@@ -12,11 +12,13 @@
 
 双击 `start-local-ui.bat`，在同一个 Offline Studio 中切换 **故事视频 / 批量工具 / 服务设置**。批量图片编辑支持多选、文件夹与拖放、共享提示词、进度、历史任务、原图查看和结果下载；高级参数默认折叠。界面适配窄屏，服务仍仅绑定本机地址。
 
-## 历史界面预览
+## 界面预览
 
-[![Offline Story Studio 静态界面预览](docs/assets/offline-story-studio-preview.png)](https://marsguo2049.github.io/comfyui-py-workflow/)
+[![Offline Studio 统一工作台概览：批量图片编辑、故事视频与服务设置](docs/assets/offline-studio-preview.svg)](https://marsguo2049.github.io/comfyui-py-workflow/#batch)
 
-[打开完整尺寸的静态预览页](https://marsguo2049.github.io/comfyui-py-workflow/)。页面使用完全虚构的公开示例说明本地工作流程，不会上传文件、请求模型或连接后端；真正运行项目仍需双击 `start-local-ui.bat`。
+[打开当前界面预览](https://marsguo2049.github.io/comfyui-py-workflow/#batch)，可切换 **批量工具 / 故事视频 / 服务设置**。上方概览示意图与响应式预览页均使用公开虚构示例；预览页与本地应用共用布局和样式，文件选择、生成操作和后台连接均已禁用。真正运行项目请双击 `start-local-ui.bat`。
+
+修改本地 UI 后，运行 `python scripts/build_ui_preview.py` 即可同步预览页。CI 会检查生成内容是否保持同步。
 
 ## 包含内容
 

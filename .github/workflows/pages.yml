@@ -5,6 +5,8 @@ on:
     branches: [main]
     paths:
       - "docs/**"
+      - "src/comfyui_py_workflow/web/**"
+      - "scripts/build_ui_preview.py"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
 
@@ -28,6 +30,8 @@ jobs:
         uses: actions/checkout@v4
       - name: Configure Pages
         uses: actions/configure-pages@v5
+      - name: Check preview matches local UI
+        run: python scripts/build_ui_preview.py --check
       - name: Upload static preview
         uses: actions/upload-pages-artifact@v5
         with:
