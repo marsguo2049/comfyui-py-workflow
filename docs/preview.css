@@ -8,6 +8,14 @@ body { padding-top: 44px; }
 input:disabled, textarea:disabled, select:disabled { opacity: .8; cursor: default; }
 button:disabled { cursor: default; }
 .preview-example { color: #707887; font-size: 12px; overflow-wrap: anywhere; padding: 10px 0; border-bottom: 1px solid #eff0f5; }
+.workflow-strip { gap: 24px; margin-bottom: 8px; }
+.workflow-strip [role=tab] { padding: 0 0 14px; min-height: 44px; background: transparent; color: #707887; border-radius: 0; border-bottom: 2px solid transparent; font-size: 14px; font-weight: 500; }
+.workflow-strip [role=tab].active { color: #525ce5; border-bottom-color: #525ce5; }
+.preview-stage-hint { margin: 0 0 22px; }
+[role=tabpanel]:focus-visible { outline: 2px solid #969dfa; outline-offset: 4px; }
+.preview-complete #progress-bar { width: 100%; }
+.preview-download { display: inline-block; min-height: 44px; padding: 9px 0; text-decoration: none; }
+#view-story .duration-option { cursor: default; }
 @media (max-width: 760px) {
   body { padding-top: 64px; }
   .preview-notice { min-height: 64px; padding: 8px 16px; gap: 4px 10px; flex-wrap: wrap; font-size: 11px; }
@@ -15,4 +23,6 @@ button:disabled { cursor: default; }
   .preview-notice a { margin-left: 0; }
   .sidebar { top: 64px; }
   .no-script { margin: 16px; }
+  .workflow-strip { gap: 8px; }
+  .workflow-strip [role=tab] { font-size: 12px; }
 }

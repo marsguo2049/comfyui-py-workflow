@@ -20,6 +20,8 @@
 
 修改本地 UI 后，运行 `python scripts/build_ui_preview.py` 即可同步预览页。CI 会检查生成内容是否保持同步。
 
+故事视频的三个阶段可直接点开：[输入故事](https://marsguo2049.github.io/comfyui-py-workflow/#story/input)、[分析与分镜](https://marsguo2049.github.io/comfyui-py-workflow/#story/plan)、[生成与导出](https://marsguo2049.github.io/comfyui-py-workflow/#story/output)。分镜使用虚构故事，结果页提供仓库已有的独立单车样片播放与下载，无需创建或运行任务。
+
 ## 包含内容
 
 - 基于 Python 标准库的小型本地 ComfyUI HTTP 客户端。

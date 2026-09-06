@@ -20,6 +20,8 @@ Run `start-local-ui.bat` to switch between **Story video / Batch tools / Service
 
 To keep the preview aligned after UI changes, run `python scripts/build_ui_preview.py`. CI checks that the generated preview is up to date.
 
+All story stages are directly accessible: [Story input](https://marsguo2049.github.io/comfyui-py-workflow/#story/input), [Analysis & storyboard](https://marsguo2049.github.io/comfyui-py-workflow/#story/plan), and [Generation & export](https://marsguo2049.github.io/comfyui-py-workflow/#story/output). The storyboard uses a fictional story; the results view plays a separate existing public bicycle sample. No task creation or generation is required.
+
 ## What it includes
 
 - A small standard-library HTTP client for local ComfyUI.

@@ -22,10 +22,10 @@ def test_public_preview_is_inert_and_all_assets_are_local():
                 self.scripts.append(attrs.get('src'))
             if tag in {'input', 'textarea', 'select'}:
                 assert 'disabled' in attrs
-            if tag == 'button' and 'data-view' not in attrs and attrs.get('id') != 'go-settings':
+            if tag == 'button' and 'data-view' not in attrs and 'data-story-stage' not in attrs and attrs.get('id') != 'go-settings':
                 assert 'disabled' in attrs
                 self.actions += 1
-            if tag in {'link', 'script', 'img'}:
+            if tag in {'link', 'script', 'img', 'source'}:
                 reference = attrs.get('href', attrs.get('src', ''))
                 if tag == 'img' and not reference:
                     assert 'hidden' in attrs.get('class', '').split()
@@ -50,3 +50,38 @@ def test_preview_uses_local_styles_and_readme_asset_is_safe_svg():
     for node in tree.iter():
         assert node.tag.rsplit('}', 1)[-1] not in {'script', 'foreignObject', 'image'}
         assert all(not key.startswith('on') for key in node.attrib)
+
+
+def test_story_preview_stages_are_unlocked_and_grouped():
+    class Stages(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self.stack = []
+            self.tabs = {}
+            self.containers = {}
+
+        def handle_starttag(self, tag, attrs):
+            attrs = dict(attrs)
+            if 'id' in attrs:
+                self.containers[attrs['id']] = list(self.stack)
+            if 'data-story-stage' in attrs:
+                assert 'disabled' not in attrs
+                assert attrs['role'] == 'tab'
+                self.tabs[attrs['data-story-stage']] = attrs['aria-controls']
+            if tag not in {'meta', 'link', 'input', 'img', 'br', 'hr', 'source'}:
+                self.stack.append((tag, attrs.get('id')))
+
+        def handle_endtag(self, tag):
+            assert self.stack[-1][0] == tag
+            self.stack.pop()
+
+    page = Stages()
+    page.feed((ROOT / 'docs/index.html').read_text(encoding='utf-8'))
+    assert not page.stack
+    assert page.tabs == {stage: f'story-stage-{stage}' for stage in ['input', 'plan', 'output']}
+    for item, stage in [('story-text', 'input'), ('analysis-panel', 'plan'), ('plan-panel', 'plan'),
+                        ('progress-panel', 'output'), ('results-panel', 'output')]:
+        assert ('div', f'story-stage-{stage}') in page.containers[item]
+    assert not any((tag, key) == ('div', 'view-story') for tag, key in page.containers['view-batch'])
+    for name in ['bicycle-frame-0001.png', 'bicycle-frame-0002.png', 'bicycle-frame-0003.png', 'bicycle-final-10s.mp4']:
+        assert (ROOT / 'docs/assets' / name).read_bytes() == (ROOT / 'examples/bicycle-sequence/assets' / name).read_bytes()
