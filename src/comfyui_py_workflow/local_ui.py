@@ -37,7 +37,7 @@ def comfyui_status(url: str) -> dict[str, Any]:
     if not is_loopback_url(url):
         raise ValueError("ComfyUI 地址必须使用本机回环地址")
     try:
-        ComfyUIClient(url, timeout=3).check_health()
+        ComfyUIClient(url, timeout_seconds=3).check_health()
     except Exception as exc:
         return {"ok": False, "url": url, "message": f"无法连接：{exc}"}
     return {"ok": True, "url": url, "message": "ComfyUI 已连接"}

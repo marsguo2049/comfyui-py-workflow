@@ -26,6 +26,18 @@ def test_local_ui_port_is_single_instance() -> None:
         first.server_close()
 
 
+def test_status_uses_real_client_constructor(monkeypatch) -> None:
+    from comfyui_py_workflow.client import ComfyUIClient
+    from comfyui_py_workflow.local_ui import comfyui_status
+
+    def health(client):
+        assert client.timeout_seconds == 3
+        return {"system": {}}
+
+    monkeypatch.setattr(ComfyUIClient, "check_health", health)
+    assert comfyui_status("http://127.0.0.1:8188")["ok"] is True
+
+
 def test_byte_ranges_include_suffix_and_open_ended_forms() -> None:
     assert parse_byte_range(None, 1000) is None
     assert parse_byte_range("bytes=100-199", 1000) == (100, 199)
