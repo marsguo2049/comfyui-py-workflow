@@ -39,7 +39,12 @@ python -m pip install -e ".[media]"
 cpw-workbench
 ```
 
-Workbench 地址为 `http://127.0.0.1:7860/#batch`。任务默认保存在：
+Workbench 地址为 `http://127.0.0.1:7860/#batch`。
+
+可与端口 `7870` 的 Offline Studio 同时打开。重复双击 `start-local-ui.bat`
+或 `start-batch-image-edit-ui.bat` 会打开已运行的工作台，不会重复启动服务。
+
+批量任务目录：
 
 ```text
 outputs/comfyui-workbench/batch-jobs/<任务编号>/

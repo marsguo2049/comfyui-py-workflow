@@ -8,7 +8,7 @@ if not exist "%CPW_PYTHON%" goto missing_python
 if /I "%~1"=="--diagnose" goto diagnose
 
 echo Starting ComfyUI Workbench on http://127.0.0.1:7860/#batch
-"%CPW_PYTHON%" -m comfyui_py_workflow.local_ui --view batch
+"%CPW_PYTHON%" scripts\launch.py --view batch
 set "CPW_EXIT_CODE=%ERRORLEVEL%"
 
 if not "%CPW_EXIT_CODE%"=="0" (

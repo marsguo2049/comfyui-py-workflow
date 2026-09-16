@@ -10,7 +10,7 @@ if not exist ".venv\Scripts\python.exe" (
 )
 
 echo Starting ComfyUI Workbench on http://127.0.0.1:7860/#batch
-".venv\Scripts\python.exe" -m comfyui_py_workflow.local_ui
-echo.
-echo ComfyUI Workbench stopped.
-pause
+".venv\Scripts\python.exe" scripts\launch.py %*
+set "CPW_EXIT_CODE=%ERRORLEVEL%"
+if not "%CPW_EXIT_CODE%"=="0" pause
+exit /b %CPW_EXIT_CODE%

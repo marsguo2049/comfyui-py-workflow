@@ -39,7 +39,13 @@ Start ComfyUI at `http://127.0.0.1:8188`, then double-click `start-local-ui.bat`
 cpw-workbench
 ```
 
-The Workbench opens at `http://127.0.0.1:7860/#batch`. Jobs are stored under:
+The Workbench opens at `http://127.0.0.1:7860/#batch`.
+
+It can run alongside Offline Studio on port `7870`. Reopening `start-local-ui.bat`
+or `start-batch-image-edit-ui.bat` opens the existing workbench without starting
+a second server.
+
+Batch jobs are stored under:
 
 ```text
 outputs/comfyui-workbench/batch-jobs/<job-id>/
