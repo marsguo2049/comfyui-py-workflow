@@ -4,6 +4,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
+BACKEND = ROOT
 
 
 def test_public_preview_is_inert_and_all_assets_are_local():
@@ -20,11 +21,9 @@ def test_public_preview_is_inert_and_all_assets_are_local():
                 self.policy = attrs['content']
             if tag == 'script':
                 self.scripts.append(attrs.get('src'))
-            if tag in {'input', 'textarea', 'select'} and attrs.get('id') != 'batch-tool':
-                assert 'disabled' in attrs
-            if tag == 'select' and attrs.get('id') == 'batch-tool':
-                assert 'disabled' not in attrs
-            if tag == 'button' and 'data-view' not in attrs and attrs.get('id') != 'go-settings':
+            if tag in {'input', 'textarea', 'select'}:
+                assert 'disabled' in attrs or attrs.get('id') == 'batch-tool'
+            if tag == 'button' and 'data-view' not in attrs and 'data-story-stage' not in attrs and attrs.get('id') != 'go-settings':
                 assert 'disabled' in attrs
                 self.actions += 1
             if tag in {'link', 'script', 'img', 'source'}:
@@ -40,11 +39,11 @@ def test_public_preview_is_inert_and_all_assets_are_local():
     assert page.scripts == ['preview.js']
     assert "connect-src 'none'" in page.policy
     assert "form-action 'none'" in page.policy
-    assert page.actions > 5
+    assert page.actions > 10
 
 
 def test_preview_uses_local_styles_and_readme_asset_is_safe_svg():
-    assert (ROOT / 'docs/style.css').read_text(encoding='utf-8') == (ROOT / 'src/comfyui_py_workflow/web/style.css').read_text(encoding='utf-8')
+    assert (ROOT / 'docs/style.css').read_text(encoding='utf-8') == (BACKEND / 'src/comfyui_py_workflow/web/style.css').read_text(encoding='utf-8')
     import xml.etree.ElementTree as ET
     svg = ROOT / 'docs/assets/comfyui-workbench-preview.svg'
     tree = ET.fromstring(svg.read_text(encoding='utf-8'))
@@ -54,34 +53,48 @@ def test_preview_uses_local_styles_and_readme_asset_is_safe_svg():
         assert all(not key.startswith('on') for key in node.attrib)
 
 
-def test_preview_contains_only_comfyui_batch_workbench_and_synthetic_pairs():
-    class Workbench(HTMLParser):
+def test_story_preview_stages_are_unlocked_and_grouped():
+    class Stages(HTMLParser):
         def __init__(self):
             super().__init__()
-            self.ids = set()
-            self.views = set()
-            self.options = set()
+            self.stack = []
+            self.tabs = {}
+            self.containers = {}
 
         def handle_starttag(self, tag, attrs):
             attrs = dict(attrs)
             if 'id' in attrs:
-                self.ids.add(attrs['id'])
-            if 'data-view' in attrs:
+                self.containers[attrs['id']] = list(self.stack)
+            if 'data-story-stage' in attrs:
                 assert 'disabled' not in attrs
-                self.views.add(attrs['data-view'])
-            if tag == 'option':
-                self.options.add(attrs.get('value'))
+                assert attrs['role'] == 'tab'
+                self.tabs[attrs['data-story-stage']] = attrs['aria-controls']
+            if tag not in {'meta', 'link', 'input', 'img', 'br', 'hr', 'source'}:
+                self.stack.append((tag, attrs.get('id')))
 
-    html = (ROOT / 'docs/index.html').read_text(encoding='utf-8')
-    page = Workbench()
-    page.feed(html)
-    assert page.views == {'batch', 'settings'}
-    assert 'first-last-video' in page.options
-    assert {'view-batch', 'view-settings', 'batch-pair-preview'} <= page.ids
-    assert 'view-story' not in html
-    assert 'view-comic' not in html
-    assert 'LM Studio' not in html
-    assert 'story-text' not in html
-    assert 'translation' not in html.lower()
-    assert 'sample-start-01.png' in html
-    assert 'sample-end-01.png' in html
+        def handle_endtag(self, tag):
+            assert self.stack[-1][0] == tag
+            self.stack.pop()
+
+    page = Stages()
+    page.feed((ROOT / 'docs/index.html').read_text(encoding='utf-8'))
+    assert not page.stack
+    assert page.tabs == {stage: f'story-stage-{stage}' for stage in ['input', 'plan', 'output']}
+    for item, stage in [('story-text', 'input'), ('analysis-panel', 'plan'), ('plan-panel', 'plan'),
+                        ('progress-panel', 'output'), ('results-panel', 'output')]:
+        assert ('div', f'story-stage-{stage}') in page.containers[item]
+    for view in ['view-comic', 'view-batch', 'view-settings']:
+        assert ('div', 'view-story') not in page.containers[view]
+    assert ('div', 'view-comic') in page.containers['comic-plan-panel']
+    assert ('div', 'view-comic') in page.containers['comic-results']
+    for name in ['bicycle-frame-0001.png', 'bicycle-frame-0002.png', 'bicycle-frame-0003.png', 'bicycle-final-10s.mp4']:
+        assert (ROOT / 'docs/assets' / name).read_bytes() == (BACKEND / 'examples/bicycle-sequence/assets' / name).read_bytes()
+
+
+def test_preview_restores_creative_workflows_without_aggregate_tools():
+    page = (ROOT / 'docs/index.html').read_text(encoding='utf-8')
+    for text in ['view-story', 'view-comic', 'first-last-video', 'id="lm-url"']:
+        assert text in page
+    for text in ['translate.html', 'my-llm', 'multi-model-workflow-optimization']:
+        assert text not in page
+    assert '/api/' not in (ROOT / 'docs/preview.js').read_text(encoding='utf-8')

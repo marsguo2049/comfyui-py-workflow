@@ -57,19 +57,23 @@ def test_rendered_workbench_is_comfyui_only_and_uses_shared_batch_fragment() -> 
     assert "ComfyUI Workbench" in html
     assert '<div id="view-batch" class="hidden">' in html
     assert "批量首尾帧视频" in html
-    assert "LM Studio" not in html
-    assert "view-story" not in html
-    assert "view-comic" not in html
-    assert "lm-url" not in html
-    assert "story-text" not in html
+    assert "LM Studio" in html
+    assert "view-story" in html
+    assert "view-comic" in html
+    assert "lm-url" in html
+    assert "story-text" in html
     assert "translation" not in html.lower()
-    assert "/static/app.js" not in html
-    assert "/static/comic.js" not in html
+    assert "/static/app.js" in html
+    assert "/static/comic.js" in html
 
 
-def test_standalone_http_boundary_exposes_batch_but_not_creative_routes(tmp_path) -> None:
+def test_standalone_http_boundary_includes_creative_but_not_translation(tmp_path) -> None:
+    from comfyui_py_workflow.studio import OfflineStudio
+    from comfyui_py_workflow.comic_studio import ComicStudio
     class Handler(StudioRequestHandler):
         batch = BatchStudio(tmp_path / "batch-jobs")
+        studio = OfflineStudio(tmp_path / "stories")
+        comic = ComicStudio(tmp_path / "comic-jobs")
 
         def log_message(self, *args):
             pass
@@ -87,16 +91,16 @@ def test_standalone_http_boundary_exposes_batch_but_not_creative_routes(tmp_path
             "first-last-video",
         }
 
-        for method, path, body in [
-            ("GET", "/api/projects", None),
-            ("GET", "/api/comic/jobs", None),
-            ("POST", "/api/analyze", b"{}"),
-            ("POST", "/api/comic/create", b"{}"),
-            ("POST", "/api/translate", b"{}"),
+        for method, path, body, expected in [
+            ("GET", "/api/projects", None, 200),
+            ("GET", "/api/comic/jobs", None, 200),
+            ("POST", "/api/project/text", b'{"text":"A synthetic story."}', 201),
+            ("POST", "/api/comic/create", b'{"text":"A synthetic comic."}', 201),
+            ("POST", "/api/translate", b"{}", 404),
         ]:
             connection.request(method, path, body=body)
             response = connection.getresponse()
-            assert response.status == 404
+            assert response.status == expected
             response.read()
     finally:
         connection.close()

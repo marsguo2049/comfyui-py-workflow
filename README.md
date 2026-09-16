@@ -2,9 +2,9 @@
 
 **English** | [简体中文](README.zh-CN.md)
 
-Run, parameterize, and chain local ComfyUI API workflows from Python. The package includes a loopback-only **ComfyUI Workbench** for batch image editing and first/last-frame video generation.
+Run, parameterize, and chain local ComfyUI API workflows from Python. The package includes a loopback-only **ComfyUI Workbench** for story videos, story comics, batch image editing and first/last-frame video generation.
 
-The standalone Workbench is intentionally ComfyUI-only. Story video, story comic, document translation, and shared LM Studio settings live in the separate [Offline Studio](https://github.com/marsguo2049/offline-studio), which opens on port `7870`. The reusable story and comic Python engines remain available for compatible callers.
+The Workbench includes all ComfyUI creative workflows, including story video and story comic with their LM Studio planning settings. [Offline Studio](https://github.com/marsguo2049/offline-studio) on port `7870` aggregates these workflows with document translation and learning/research links. Each application has its own local UI, public preview and task storage.
 
 > This is an independent community project and is not affiliated with or endorsed by Comfy Org.
 
@@ -16,12 +16,14 @@ The standalone Workbench is intentionally ComfyUI-only. Story video, story comic
 
 The Workbench provides:
 
+- story videos: analyze, review storyboards, generate and export;
+- story comics: review panels, generate images and export a reading page;
 - batch Qwen Image Edit jobs with multi-file, folder, and drag-and-drop input;
 - batch MiniMax H3 first/last-frame videos with natural-order or same-name pairing;
 - pairing preview before uploads or inference;
 - duration, aspect ratio, resolution, steps, seeds, timeout, and optional workflow overrides;
 - persistent progress and job history, image downloads, and byte-range MP4 playback;
-- one saved loopback ComfyUI address, with no LM Studio dependency.
+- loopback ComfyUI and LM Studio settings; batch tools need only ComfyUI.
 
 ## Quick start
 
@@ -43,7 +45,7 @@ The Workbench opens at `http://127.0.0.1:7860/#batch`. Jobs are stored under:
 outputs/comfyui-workbench/batch-jobs/<job-id>/
 ```
 
-Use `--output-root` to choose another batch-job root. Existing `outputs/offline-studio/` histories are left untouched and are not migrated automatically.
+Use `--output-root` to choose another batch-job root. Story/video history is loaded from `outputs/offline-studio/`, and comics from its `comic-jobs/` subdirectory. Use `--project-root` to select a different creative root; existing histories are not moved.
 
 See [batch image editing](BATCH_IMAGE_EDIT_UI.zh-CN.md) and [first/last-frame video](BATCH_VIDEO.zh-CN.md) for detailed usage. Only edit media you own or are authorized to modify.
 
@@ -74,7 +76,7 @@ Review the generated plan before execution, then run:
 cpw-story-video --plan outputs/story-video/plans/PLAN-ID/story-plan.json --execute
 ```
 
-This CLI accepts direct text plus TXT, Markdown, DOCX, and text-based PDF. Scanned PDFs require OCR. Its LM Studio URL is loopback-restricted by default. The browser UI for these creative workflows is maintained by [Offline Studio](https://github.com/marsguo2049/offline-studio).
+This CLI accepts direct text plus TXT, Markdown, DOCX, and text-based PDF. Scanned PDFs require OCR. Its LM Studio URL is loopback-restricted by default. Open the [story video preview](https://marsguo2049.github.io/comfyui-py-workflow/#story) or [comic preview](https://marsguo2049.github.io/comfyui-py-workflow/#comic). Both workflows are available locally through `cpw-workbench --view story` or `--view comic`.
 
 ## Workflows and models
 

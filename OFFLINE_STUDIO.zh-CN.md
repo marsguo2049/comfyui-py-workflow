@@ -1,6 +1,5 @@
-# Offline Studio
+# ComfyUI Workbench
 
-> **迁移说明（0.6）**：故事视频与故事漫画界面已迁移到独立的 [Offline Studio 仓库](https://github.com/marsguo2049/offline-studio)，默认地址为 `http://127.0.0.1:7870/`，可查看[公开预览](https://marsguo2049.github.io/offline-studio/)。本仓库的 `start-local-ui.bat` 现在启动端口 `7860` 上的 ComfyUI Workbench，只提供批量图片与首尾帧视频。本文其余内容作为故事工作流与旧目录说明保留；请从 Offline Studio 启动相应界面。
 
 统一入口包含“故事视频”“故事漫画”“批量工具”“服务设置”。故事视频保留原来的分析、分镜确认和生成流程；故事漫画将故事直接生成连续分格、旁白与对白阅读页，详见 [漫画工具说明](STORY_COMIC.zh-CN.md)。Qwen 批量图片编辑使用同一个本地页面和 ComfyUI 地址，详见 [批量工具说明](BATCH_IMAGE_EDIT_UI.zh-CN.md)。
 
@@ -161,7 +160,7 @@ outputs/offline-studio/<项目编号>/
 
 2. 断开网络。
 3. 启动 LM Studio、加载本地模型并开启 Local Server。
-4. 在 Offline Studio 仓库双击 `start-studio.bat`。
+4. 在本仓库双击 `start-local-ui.bat`。
 5. 上传一份 PDF，完成故事分析和分镜。
 6. 卸载 LM Studio 模型，启动 ComfyUI。
 7. 生成一个较短测试视频并检查最终路径。

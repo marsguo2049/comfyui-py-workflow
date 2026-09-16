@@ -2,9 +2,9 @@
 
 [English](README.md) | **简体中文**
 
-用 Python 直接运行、修改参数并串联本地 ComfyUI API 工作流。项目包含一个仅绑定回环地址的 **ComfyUI Workbench**，用于批量图片编辑和批量首尾帧视频。
+用 Python 直接运行、修改参数并串联本地 ComfyUI API 工作流。项目包含一个仅绑定回环地址的 **ComfyUI Workbench**，用于故事视频、故事漫画、批量图片编辑和批量首尾帧视频。
 
-独立 Workbench 只连接 ComfyUI。故事视频、故事漫画、文档翻译和 LM Studio 共享设置已迁移到独立的 [Offline Studio](https://github.com/marsguo2049/offline-studio)，默认使用端口 `7870`。本仓库仍保留故事与漫画引擎的兼容 Python API。
+故事视频、故事漫画及其需要的 LM Studio 分镜设置均属于本仓库，并在本地页面与公开预览中提供。[Offline Studio](https://github.com/marsguo2049/offline-studio) 使用端口 `7870`，汇总这些功能，再加文档翻译和学习研究入口。两个应用各有独立页面、预览与任务目录。
 
 > 这是一个独立的社区项目，与 Comfy Org 没有隶属或官方认可关系。
 
@@ -16,12 +16,14 @@
 
 Workbench 提供：
 
+- 故事视频：分析故事、审阅分镜、生成与导出；
+- 故事漫画：审阅分格、生成连续图片、导出阅读页；
 - Qwen Image Edit 批量图片任务，支持多选、文件夹和拖放；
 - MiniMax H3 批量首尾帧视频，支持自然排序或同名配对；
 - 上传与推理前的配对预览；
 - 时长、比例、分辨率、步数、种子、超时及自定义工作流参数；
 - 持久化进度与任务历史、图片下载和支持拖动播放的 MP4 字节范围响应；
-- 单独保存的本机 ComfyUI 地址，不依赖 LM Studio。
+- 本机 ComfyUI 与 LM Studio 设置；只有故事分镜需要文字模型，批量工具只需 ComfyUI。
 
 ## 快速开始
 
@@ -43,7 +45,7 @@ Workbench 地址为 `http://127.0.0.1:7860/#batch`。任务默认保存在：
 outputs/comfyui-workbench/batch-jobs/<任务编号>/
 ```
 
-可用 `--output-root` 指定其他任务根目录。旧版 `outputs/offline-studio/` 历史不会删除，也不会自动迁移。
+可用 `--output-root` 指定其他任务根目录。故事历史继续读取 `outputs/offline-studio/`，漫画读取其 `comic-jobs/` 子目录；可用 `--project-root` 修改。原有历史不搬移或删除。
 
 详细操作见[批量图片编辑](BATCH_IMAGE_EDIT_UI.zh-CN.md)和[批量首尾帧视频](BATCH_VIDEO.zh-CN.md)。只处理自己拥有或获授权修改的媒体。
 
@@ -74,7 +76,7 @@ cpw-story-video `
 cpw-story-video --plan outputs/story-video/plans/计划编号/story-plan.json --execute
 ```
 
-该命令支持直接文本、TXT、Markdown、DOCX 和文本型 PDF；扫描 PDF 需要 OCR。LM Studio 地址默认限制为回环地址。这些创作工作流的浏览器界面由 [Offline Studio](https://github.com/marsguo2049/offline-studio) 维护。
+该命令支持直接文本、TXT、Markdown、DOCX 和文本型 PDF；扫描 PDF 需要 OCR。LM Studio 地址默认限制为回环地址。本仓库提供[故事视频预览](https://marsguo2049.github.io/comfyui-py-workflow/#story)和[故事漫画预览](https://marsguo2049.github.io/comfyui-py-workflow/#comic)。本地可运行 `cpw-workbench --view story` 或 `--view comic`。
 
 ## 工作流与模型
 

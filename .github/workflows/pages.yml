@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - "docs/**"
+      - "preview-src/**"
       - "src/comfyui_py_workflow/web/**"
       - "scripts/build_ui_preview.py"
       - ".github/workflows/pages.yml"

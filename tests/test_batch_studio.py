@@ -193,7 +193,7 @@ def test_http_batch_upload_media_and_origin(tmp_path):
         assert request("POST", "/api/batch/create", b"{}", {"Origin": "https://example.com"})[0] == 400
         assert len(json.loads(request("GET", "/api/batch/jobs")[1])["jobs"]) == 1
         assert request("GET", "/static/batch.js")[0] == 200
-        assert request("POST", "/api/project/text", json.dumps({"text": "A test story"}))[0] == 404
+        assert request("POST", "/api/translate", b"{}")[0] == 404
     finally:
         connection.close()
         server.shutdown()
