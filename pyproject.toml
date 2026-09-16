@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "comfyui-py-workflow"
-version = "0.5.0"
+version = "0.6.0"
 description = "Run and chain local ComfyUI API workflows from Python."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -31,6 +31,7 @@ cpw-image-sequence = "comfyui_py_workflow.image_sequence:main"
 cpw-video-sequence = "comfyui_py_workflow.video_sequence:main"
 cpw-story-video = "comfyui_py_workflow.auto_story_video:main"
 cpw-local-ui = "comfyui_py_workflow.local_ui:main"
+cpw-workbench = "comfyui_py_workflow.local_ui:main"
 cpw-batch-image-edit-ui = "comfyui_py_workflow.batch_edit_ui:main"
 
 [project.urls]

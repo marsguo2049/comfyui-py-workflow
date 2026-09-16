@@ -172,7 +172,7 @@ summary .hint { font-size: 11px; font-weight: 400; margin-left: 8px; }
 .drop-zone .button-row { justify-content: center; margin: 0; }
 .file-button { position: relative; display: inline-flex; align-items: center; justify-content: center; min-height: 38px; padding: 8px 14px; color: var(--accent); background: #eef0ff; border: 1px solid #dfe2fa; border-radius: 7px; font-size: 12px; cursor: pointer; overflow: hidden; }
 .file-button.secondary { background: #fff; color: var(--muted); border-color: var(--line); }
-.file-button input { position: absolute; inset: 0; opacity: 0; cursor: pointer; padding: 0; }
+.file-button input[type="file"] { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; opacity: 0; cursor: pointer; }
 .selection-heading { display: flex; align-items: center; justify-content: space-between; min-height: 40px; font-size: 11px; color: var(--muted); }
 .text-button { padding: 4px 8px; min-height: 34px; border: 0; background: transparent; color: var(--muted); font-size: 11px; }
 .selection-list { max-height: 192px; overflow-y: auto; }
@@ -180,6 +180,9 @@ summary .hint { font-size: 11px; font-weight: 400; margin-left: 8px; }
 .selection-row > span { flex: 1; overflow-wrap: anywhere; }
 .selection-row small { white-space: nowrap; color: #949bac; }
 .selection-row button { font-size: 18px; }
+.frame-selection-heading { display: flex; justify-content: space-between; margin-top: 12px; color: var(--muted); font-size: 10px; text-align: left; }
+.frame-selection { max-height: 112px; margin-top: 4px; padding: 0 8px; border-radius: 6px; background: #fff; text-align: left; }
+.frame-selection:empty { display: none; }
 .prompt-label { color: var(--text); margin: 16px 0 20px; font-size: 13px; gap: 10px; }
 textarea::placeholder, input::placeholder { color: #a0a5b1; }
 .prompt-label textarea { font-size: 13px; line-height: 1.8; min-height: 120px; }

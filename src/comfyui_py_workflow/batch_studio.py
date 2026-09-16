@@ -12,6 +12,8 @@ from pathlib import Path
 from typing import Any
 
 from .batch_image_edit import QwenBatchImageEditor, default_qwen_workflow_path
+from .batch_video import (FirstLastVideoGenerator, VideoStateUnknown, default_video_workflow_path,
+                          pair_frames, validate_video_template, video_settings)
 from .client import ComfyUIClient, load_workflow_template
 from .offline import is_loopback_url
 from .studio import utc_now
@@ -22,6 +24,8 @@ MAX_FILE_BYTES = 25 * 1024 * 1024
 MAX_JOB_BYTES = 500 * 1024 * 1024
 MAX_FILES = 200
 BATCH_TOOLS = [{"id": "image-edit", "name": "批量图片编辑", "description": "用同一段提示词，逐张修改图片。", "model": "Qwen Image Edit 2509"}]
+BATCH_TOOLS.append({"id": "first-last-video", "name": "批量首尾帧视频",
+                    "description": "选择首尾帧，按配对批量生成视频。", "model": "MiniMax H3"})
 
 
 class BatchStudio:
@@ -95,22 +99,47 @@ class BatchStudio:
         if data.startswith((b"II\x2a\x00", b"MM\x00\x2a")): return ".tiff"
         raise ValueError("请选择 PNG、JPEG、WebP、GIF、BMP 或 TIFF 图片")
 
-    def upload(self, job_id: str, filename: str, data: bytes) -> dict[str, Any]:
+    def upload(
+        self,
+        job_id: str,
+        filename: str,
+        data: bytes,
+        *,
+        role: str = "",
+        relative_path: str = "",
+    ) -> dict[str, Any]:
         if not data or len(data) > MAX_FILE_BYTES:
             raise ValueError("单张图片须为 1 字节至 25 MB")
         suffix = self._image_suffix(data)
         name = filename.replace("\\", "/").rsplit("/", 1)[-1][:180]
+        display_path = relative_path.replace("\\", "/").strip()
+        parts = [part for part in display_path.split("/") if part]
+        if (
+            not parts
+            or len(display_path) > 500
+            or parts[-1] != name
+            or any(part in {".", ".."} or any(ord(char) < 32 for char in part) for part in parts)
+        ):
+            display_path = name
+        else:
+            display_path = "/".join(parts)
         with self._lock:
             job = self._load(job_id)
             if job["status"] != "draft":
                 raise ValueError("仅待开始的任务可以添加图片")
+            if job["kind"] == "first-last-video" and role not in {"first", "last"}:
+                raise ValueError("视频输入必须指定首帧或尾帧")
             if len(job["files"]) >= MAX_FILES or sum(f["bytes"] for f in job["files"]) + len(data) > MAX_JOB_BYTES:
                 raise ValueError("每个任务最多 200 张图片、合计 500 MB")
             # Keep meaningful names, but never use a browser-supplied path as a disk path.
             stem = re.sub(r"[^\w\-]", "_", Path(name).stem)[:80] or "image"
             relative = f"input/{len(job['files']) + 1:04d}-{stem}{suffix}"
             (self._dir(job_id) / relative).write_bytes(data)
-            job["files"].append(dict(name=name, path=relative, bytes=len(data)))
+            job["files"].append(dict(
+                name=name, relative_path=display_path, path=relative, bytes=len(data)
+            ))
+            if job["kind"] == "first-last-video":
+                job["files"][-1]["role"] = role
             self._save(job)
             return deepcopy(job)
 
@@ -125,22 +154,30 @@ class BatchStudio:
             raise ValueError("离线模式仅允许本机 ComfyUI 地址")
         if not 0 <= seed <= 2**53 - MAX_FILES or not math.isfinite(timeout) or not 1 <= timeout <= 86400:
             raise ValueError("种子或超时参数超出范围（超时 1–86400 秒）")
-        workflow = str(settings.get("workflow_path") or default_qwen_workflow_path())
-        QwenBatchImageEditor._validate_template(load_workflow_template(workflow))
         with self._lock:
             job = self._load(job_id)
             if job["status"] != "draft" or not job["files"]:
                 raise ValueError("任务已开始或尚未添加图片")
+            is_video = job["kind"] == "first-last-video"
+            workflow = str(settings.get("workflow_path") or
+                           (default_video_workflow_path() if is_video else default_qwen_workflow_path()))
+            extra = video_settings(settings) if is_video else {}
+            if is_video:
+                validate_video_template(load_workflow_template(workflow))
+                job["pairs"] = pair_frames(job["files"], extra["pairing_mode"])
+            else:
+                QwenBatchImageEditor._validate_template(load_workflow_template(workflow))
             self._threads = {key: thread for key, thread in self._threads.items() if thread.is_alive()}
             if self._threads:
                 raise ValueError("已有批量任务运行中，请完成或停止后再开始")
             job.update(status="running", message="准备连接 ComfyUI…", settings=dict(
                 prompt=prompt, negative_prompt=str(settings.get("negative_prompt", "")),
                 comfyui_url=url, base_seed=seed, timeout_seconds=timeout,
-                increment_seed=bool(settings.get("increment_seed", True)), workflow_path=workflow))
+                increment_seed=bool(settings.get("increment_seed", True)), workflow_path=workflow, **extra))
             self._save(job)
             event = self._cancel[job_id] = threading.Event()
-            thread = self._threads[job_id] = threading.Thread(target=self._run, args=(job_id, event), daemon=True)
+            thread = self._threads[job_id] = threading.Thread(
+                target=self._run_video if is_video else self._run, args=(job_id, event), daemon=True)
             thread.start()
             return deepcopy(job)
 
@@ -149,7 +186,7 @@ class BatchStudio:
             job = self._load(job_id)
             if job["status"] in {"running", "stopping"} and job_id in self._cancel:
                 self._cancel[job_id].set()
-                job.update(status="stopping", message="将在当前图片完成后停止，已完成的结果会保留。")
+                job.update(status="stopping", message="将在当前生成完成后停止，已完成的结果会保留。")
                 self._save(job)
             return job
 
@@ -185,6 +222,67 @@ class BatchStudio:
                 cancel_event=event, on_progress=progress, on_status=lambda message: update(message=message), **settings)
             status = "cancelled" if result.cancelled else "completed_with_errors" if result.failed_count else "succeeded"
             update(status=status, message=f"{'已停止' if result.cancelled else '处理完成'} · 成功 {result.succeeded_count} 张，失败 {result.failed_count} 张")
+        except Exception as exc:
+            update(status="failed", message=f"{type(exc).__name__}: {exc}")
+        finally:
+            with self._lock:
+                self._cancel.pop(job_id, None)
+
+    def _run_video(self, job_id: str, event: threading.Event) -> None:
+        def update(**values: Any) -> None:
+            with self._lock:
+                current = self._load(job_id)
+                if current["status"] == "stopping" and set(values) == {"message"}:
+                    return
+                current.update(values)
+                self._save(current)
+
+        try:
+            job = self.get(job_id)
+            settings = job["settings"]
+            directory = self._dir(job_id)
+            output = directory / "output"
+            output.mkdir(exist_ok=True)
+            client = ComfyUIClient(settings["comfyui_url"])
+            client.check_health()
+            generator = FirstLastVideoGenerator(client, settings["workflow_path"])
+            for index, pair in enumerate(job["pairs"]):
+                if event.is_set():
+                    break
+                update(message=f"正在生成视频 {index + 1}/{len(job['pairs'])}：{pair['first']['name']} → {pair['last']['name']}")
+                seed = settings["base_seed"] + (index if settings["increment_seed"] else 0)
+                result = dict(name=f"{pair['first']['name']} → {pair['last']['name']}",
+                    source=pair["first"]["path"], last_source=pair["last"]["path"],
+                    seed=seed, output=None, error=None)
+                uncertain = False
+                def submitted(prompt_id):
+                    result["prompt_id"] = prompt_id
+                    update(active_prompt_id=prompt_id)
+                try:
+                    destination = output / f"clip-{index + 1:04d}.mp4"
+                    result.update(generator.generate(directory / result["source"],
+                        directory / result["last_source"], destination, settings, seed, on_submitted=submitted))
+                    result["output"] = destination.relative_to(directory).as_posix()
+                except VideoStateUnknown as exc:
+                    uncertain = True
+                    result.update(error=str(exc), prompt_id=exc.prompt_id)
+                except Exception as exc:
+                    result["error"] = f"{type(exc).__name__}: {exc}"
+                with self._lock:
+                    current = self._load(job_id)
+                    current["results"].append(result)
+                    current["completed"] += 1
+                    current["succeeded"] += int(result["error"] is None)
+                    current["failed"] += int(result["error"] is not None)
+                    if not uncertain:
+                        current.pop("active_prompt_id", None)
+                    self._save(current)
+                if uncertain:
+                    update(status="failed", message=result["error"])
+                    return
+            current = self.get(job_id)
+            status = "cancelled" if event.is_set() else "completed_with_errors" if current["failed"] else "succeeded"
+            update(status=status, message=f"{'已停止' if event.is_set() else '处理完成'} · 成功 {current['succeeded']} 段，失败 {current['failed']} 段")
         except Exception as exc:
             update(status="failed", message=f"{type(exc).__name__}: {exc}")
         finally:

@@ -1,0 +1,52 @@
+    <div id="view-batch" class="hidden">
+      <div class="tool-strip"><label>选择批量工具<select id="batch-tool"><option value="image-edit">批量图片编辑</option><option value="first-last-video">批量首尾帧视频</option></select></label><p id="batch-tool-description">用同一段提示词，逐张修改图片。</p><span class="tag" id="batch-model">Qwen Image Edit 2509</span></div>
+      <div class="batch-layout">
+        <section class="panel batch-compose">
+          <div class="section-heading"><div><h2 id="batch-compose-title">图片与修改要求</h2></div><button class="secondary" id="batch-new">新建任务</button></div>
+          <div id="batch-inputs">
+            <div id="batch-video-inputs" class="hidden">
+              <div class="two-columns">
+                <div class="drop-zone" id="batch-first-drop"><h3>首帧</h3><p>每段视频的开始画面</p><div class="button-row"><label class="file-button">选择图片<input id="batch-first-files" type="file" accept=".png,.jpg,.jpeg,.webp,.bmp,.gif,.tif,.tiff" multiple></label><label class="file-button secondary">选择文件夹<input id="batch-first-folder" type="file" webkitdirectory multiple></label></div><div class="frame-selection-heading"><strong id="batch-first-count">尚未选择</strong></div><div id="batch-first-selection" class="selection-list frame-selection" aria-live="polite"></div></div>
+                <div class="drop-zone" id="batch-last-drop"><h3>尾帧</h3><p>每段视频的结束画面</p><div class="button-row"><label class="file-button">选择图片<input id="batch-last-files" type="file" accept=".png,.jpg,.jpeg,.webp,.bmp,.gif,.tif,.tiff" multiple></label><label class="file-button secondary">选择文件夹<input id="batch-last-folder" type="file" webkitdirectory multiple></label></div><div class="frame-selection-heading"><strong id="batch-last-count">尚未选择</strong></div><div id="batch-last-selection" class="selection-list frame-selection" aria-live="polite"></div></div>
+              </div>
+              <p class="hint">首尾帧合计最多 200 张 · 单张 25 MB · 合计 500 MB。仅一侧选一张时，该图自动用于每一段视频。</p>
+              <label>配对方式<select id="batch-pairing"><option value="order">自然排序（2 排在 10 前）</option><option value="name">同名匹配（忽略扩展名及大小写）</option></select></label>
+              <p class="hint">文件夹包含子文件夹中的图片。同名匹配要求每侧名称唯一；生成前请核对下方配对。</p>
+              <div class="two-columns"><label>每段时长（秒）<input id="batch-duration" type="number" min="1" max="30" step="0.1" value="5"></label><label>画面比例<select id="batch-aspect"><option value="1:1 (Square)">1:1 方形</option><option value="16:9 (Widescreen)">16:9 横屏</option><option value="9:16 (Portrait Widescreen)">9:16 竖屏</option></select></label></div>
+              <div class="two-columns"><label>分辨率（百万像素）<input id="batch-megapixels" type="number" min="0.1" max="2" step="0.1" value="0.6"></label><label>采样步数<input id="batch-steps" type="number" min="1" max="100" value="4"></label></div>
+              <p class="hint">默认使用 4 步加速工作流。画面按所选比例居中裁切；时长与分辨率越大，显存和耗时越高。</p>
+              <p id="batch-duration-hint" class="hint"></p>
+              <div id="batch-pair-preview" class="selection-list" aria-live="polite"></div>
+            </div>
+            <div id="batch-drop" class="drop-zone">
+              <span class="drop-icon" aria-hidden="true">＋</span><h3>把图片放到这里</h3><p>拖入图片，或选择多个文件 / 整个文件夹</p>
+              <div class="button-row"><label class="file-button">选择图片<input id="batch-files" type="file" accept=".png,.jpg,.jpeg,.webp,.bmp,.gif,.tif,.tiff" multiple></label><label class="file-button secondary">选择文件夹<input id="batch-folder" type="file" webkitdirectory multiple></label></div>
+              <small>最多 200 张 · 单张 25 MB · 合计 500 MB</small>
+            </div>
+            <div id="batch-selection-summary"><div class="selection-heading"><span id="batch-selection-count">尚未添加图片</span><button class="text-button" id="batch-clear">清空</button></div>
+            <div id="batch-selection" class="selection-list"></div></div>
+            <label class="prompt-label"><span id="batch-prompt-label">想如何修改？</span><textarea id="batch-prompt" rows="4" maxlength="20000" placeholder="例如：把背景换成浅灰色摄影棚，保留主体和自然阴影。所有图片都会使用这段要求。"></textarea></label>
+            <details class="advanced"><summary>高级参数 <span class="hint">负向提示词、种子、超时与工作流</span></summary><div class="advanced-fields">
+              <label id="batch-negative-field">负向提示词<textarea id="batch-negative" rows="2" placeholder="不希望出现的内容（可选）"></textarea></label>
+              <div class="two-columns"><label>基础种子<input id="batch-seed" type="number" min="0" max="9007199254740792" value="43"></label><label>单项超时（秒）<input id="batch-timeout" type="number" min="1" max="86400" value="900"></label></div>
+              <label class="checkbox-label"><input id="batch-increment" type="checkbox" checked>每项结果种子 +1</label>
+              <label>自定义 API 工作流路径<input id="batch-workflow" placeholder="留空使用内置 Qwen Image Edit 2509"></label>
+              <p class="hint" id="batch-workflow-hint">自定义工作流需兼容现有 Qwen 节点。输出按任务单独保存，不会覆盖原图。</p>
+            </div></details>
+          </div>
+          <div class="run-footer"><p class="hint">仅需 ComfyUI，无需启动其他模型服务。</p><button id="batch-start">开始批量处理 <span aria-hidden="true">→</span></button></div>
+          <p id="batch-error" class="warnings hidden" role="alert"></p>
+        </section>
+        <aside class="batch-aside">
+          <section class="panel"><div class="section-heading"><div><h2>当前任务</h2></div><span class="tag" id="batch-status">待开始</span></div>
+            <p id="batch-message" role="status">添加图片和修改要求，开始第一批处理。</p>
+            <progress id="batch-progress" max="100" value="0" aria-label="批量任务进度"></progress>
+            <div class="batch-stats"><div><strong id="batch-completed">0/0</strong><span>已处理</span></div><div><strong id="batch-succeeded">0</strong><span>成功</span></div><div><strong id="batch-failed">0</strong><span>失败</span></div></div>
+            <div class="button-row"><button class="danger hidden" id="batch-cancel">当前图片后停止</button><button class="secondary hidden" id="batch-open">打开任务文件夹</button></div>
+          </section>
+          <section class="panel"><div class="section-heading"><div><h2>最近任务</h2></div><button class="text-button" id="batch-refresh">刷新</button></div><div id="batch-history" class="history-list"><p class="hint">还没有批量任务</p></div></section>
+          <p class="aside-note">任务与结果保存在本机。关闭页面不会停止正在运行的任务，重新打开即可查看。</p>
+        </aside>
+      </div>
+      <section class="panel"><div class="section-heading"><div><h2>处理结果</h2></div><span class="hint">点击图片查看原尺寸，或下载结果</span></div><div id="batch-results" class="batch-results"><div class="empty-results"><span aria-hidden="true">▧</span><p>处理后的图片或视频会出现在这里</p><small>每完成一项，自动更新一项。</small></div></div></section>
+    </div>

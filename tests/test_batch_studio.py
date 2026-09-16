@@ -12,8 +12,7 @@ import pytest
 from comfyui_py_workflow import batch_studio
 from comfyui_py_workflow.batch_image_edit import BatchItemResult, BatchRunResult
 from comfyui_py_workflow.batch_studio import BatchStudio
-from comfyui_py_workflow.local_ui import SingleInstanceHTTPServer, StudioRequestHandler, WEB_ROOT
-from comfyui_py_workflow.studio import OfflineStudio
+from comfyui_py_workflow.local_ui import SingleInstanceHTTPServer, StudioRequestHandler, render_index
 
 PNG = b"\x89PNG\r\n\x1a\n" + b"test-image"
 
@@ -165,7 +164,6 @@ def test_second_server_cannot_mark_existing_jobs_interrupted(tmp_path, monkeypat
 
 def test_http_batch_upload_media_and_origin(tmp_path):
     class Handler(StudioRequestHandler):
-        studio = OfflineStudio(tmp_path / "stories")
         batch = BatchStudio(tmp_path / "batch")
         def log_message(self, *args): pass
 
@@ -184,9 +182,10 @@ def test_http_batch_upload_media_and_origin(tmp_path):
         status, body = request("POST", "/api/batch/create", b"{}")
         assert status == 201
         job = json.loads(body)
-        status, body = request("POST", f"/api/batch/upload?id={job['id']}&filename={quote('image.png')}", PNG)
+        status, body = request("POST", f"/api/batch/upload?id={job['id']}&filename={quote('image.png')}&relative_path={quote('album/subfolder/image.png')}", PNG)
         assert status == 201
         uploaded = json.loads(body)
+        assert uploaded["files"][0]["relative_path"] == "album/subfolder/image.png"
         path = f"/batch-media/{job['id']}/{uploaded['files'][0]['path']}"
         assert request("GET", path) == (200, PNG)
         assert request("GET", path, headers={"Range": "bytes=0-7"}) == (206, PNG[:8])
@@ -194,8 +193,7 @@ def test_http_batch_upload_media_and_origin(tmp_path):
         assert request("POST", "/api/batch/create", b"{}", {"Origin": "https://example.com"})[0] == 400
         assert len(json.loads(request("GET", "/api/batch/jobs")[1])["jobs"]) == 1
         assert request("GET", "/static/batch.js")[0] == 200
-        # The story API continues to work under the same handler.
-        assert request("POST", "/api/project/text", json.dumps({"text": "A test story"}))[0] == 201
+        assert request("POST", "/api/project/text", json.dumps({"text": "A test story"}))[0] == 404
     finally:
         connection.close()
         server.shutdown()
@@ -203,7 +201,7 @@ def test_http_batch_upload_media_and_origin(tmp_path):
         worker.join(timeout=3)
 
 
-def test_workspace_markup_is_balanced_and_keeps_story_panels_together():
+def test_workspace_markup_is_balanced_and_keeps_batch_fragment_together():
     class Parser(HTMLParser):
         stack = []
         ids = {}
@@ -218,9 +216,9 @@ def test_workspace_markup_is_balanced_and_keeps_story_panels_together():
             assert self.stack and self.stack[-1][0] == tag, (tag, self.stack)
             self.stack.pop()
     parser = Parser()
-    parser.feed((WEB_ROOT / "index.html").read_text(encoding="utf-8"))
+    parser.feed(render_index())
     assert not parser.stack
-    assert ("div", "view-story") in parser.ids["results-panel"]
-    assert ("div", "view-story") not in parser.ids["batch-start"]
     assert ("div", "view-batch") in parser.ids["batch-start"]
+    assert ("div", "batch-first-drop") in parser.ids["batch-first-selection"]
+    assert ("div", "batch-last-drop") in parser.ids["batch-last-selection"]
     assert ("div", "view-settings") in parser.ids["services-panel"]

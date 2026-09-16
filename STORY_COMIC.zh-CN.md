@@ -1,13 +1,15 @@
 # 故事漫画 · Offline Studio
 
+> **迁移说明（0.6）**：故事漫画界面已迁移到独立的 [Offline Studio 仓库](https://github.com/marsguo2049/offline-studio)，默认地址为 `http://127.0.0.1:7870/#comic`，可查看[公开预览](https://marsguo2049.github.io/offline-studio/#comic)。本仓库保留漫画引擎的兼容 Python API；`start-local-ui.bat` 现在只启动 ComfyUI 批量工作台。
+
 把故事变成连续图片，并配上可编辑的旁白与对白。它复用故事视频已有的 LM Studio、Z-Image Turbo 和 Qwen Image Edit 2509 工作流，使用独立的漫画分镜提示词，不经过视频生成阶段。
 
-[查看公开界面预览](https://marsguo2049.github.io/comfyui-py-workflow/#comic)。公开页只展示虚构分镜和仓库已有的单车样图排版，不连接本机服务、不读取私人历史。
+[查看 Offline Studio 公开界面预览](https://marsguo2049.github.io/offline-studio/#comic)。公开页只展示虚构内容，不连接本机服务、不读取私人历史。
 
 ## 开始创作
 
 1. 安装项目依赖，启动 LM Studio 本地服务，加载支持结构化输出的文字模型。ComfyUI 需准备 Z-Image 与 Qwen 工作流的模型和节点，见 [工作流说明](workflows/README.md)；漫画不需要 H3 视频模型或视频编码器。
-2. 双击 `start-local-ui.bat`，选择“故事漫画”。也可以运行 `cpw-local-ui --view comic`。服务地址在统一的“服务设置”中填写，仅接受本机回环地址。
+2. 在 Offline Studio 仓库双击 `start-studio.bat`，选择“故事漫画”；也可以运行 `offline-studio --view comic`。服务地址在统一的“服务设置”中填写，仅接受本机回环地址。
 3. 输入故事，或选择 TXT、Markdown、DOCX、PDF 文档；选择文档时以文档为准。直接输入最多 120,000 字符，文档最多 100 MB；PDF 读取与 OCR 沿用 [离线工作台的依赖和限制](OFFLINE_STUDIO.zh-CN.md#pdf-与离线-ocr)。
 4. 可选上传一张 PNG、JPEG 或 WebP 参考图，最多 25 MB。在故事中说明图中人物的身份和外观；文字模型不直接识别参考图。
 5. 选择 2–16 格、画幅与画风，点击“生成漫画分镜”。长文档先摘要；默认在分镜完成后尝试卸载文字模型，失败时会提示手动卸载。

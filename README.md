@@ -2,102 +2,64 @@
 
 **English** | [简体中文](README.zh-CN.md)
 
-Run, parameterize, and chain local ComfyUI API workflows from Python.
+Run, parameterize, and chain local ComfyUI API workflows from Python. The package includes a loopback-only **ComfyUI Workbench** for batch image editing and first/last-frame video generation.
 
-This repository focuses on execution infrastructure rather than model-routing research: load an exported API graph, replace explicit node inputs, submit it to ComfyUI, wait for completion, download artifacts, and feed one workflow's output into the next.
+The standalone Workbench is intentionally ComfyUI-only. Story video, story comic, document translation, and shared LM Studio settings live in the separate [Offline Studio](https://github.com/marsguo2049/offline-studio), which opens on port `7870`. The reusable story and comic Python engines remain available for compatible callers.
 
 > This is an independent community project and is not affiliated with or endorsed by Comfy Org.
 
-## Unified workspace
+## ComfyUI Workbench
 
-Run `start-local-ui.bat` to switch between **Story video / Story comic / Batch tools / Service settings** in Offline Studio. Batch image editing includes multi-file and folder selection, drag and drop, shared prompts, progress, persistent job history, and image downloads. Advanced settings are collapsed by default. The responsive UI remains loopback-only.
+[![ComfyUI Workbench preview showing synthetic first/last-frame video pairs](docs/assets/comfyui-workbench-preview.svg)](https://marsguo2049.github.io/comfyui-py-workflow/#batch)
 
-**Story comic** turns a story into 2–16 editable panels using LM Studio, Z-Image and Qwen Image Edit. Review character settings and panel prompts, generate connected images, resume interrupted jobs or redo from a selected panel, then export an HTML reader and ZIP. Captions and dialogue are typeset below each image. See the [comic preview](https://marsguo2049.github.io/comfyui-py-workflow/#comic) and [Chinese guide](STORY_COMIC.zh-CN.md).
+[Open the inert public preview](https://marsguo2049.github.io/comfyui-py-workflow/#batch). It uses synthetic filenames, disables uploads and task actions, and cannot contact a backend because its Content Security Policy sets `connect-src 'none'`.
 
-## UI preview
+The Workbench provides:
 
-[![Offline Studio unified workspace overview: batch image editing, story video, and service settings](docs/assets/offline-studio-preview.svg)](https://marsguo2049.github.io/comfyui-py-workflow/#batch)
-
-[Open the current UI preview](https://marsguo2049.github.io/comfyui-py-workflow/#batch) and switch between **Story comic**, **Batch tools**, **Story video**, and **Service settings**. The overview illustration above and the responsive preview use public examples. The comic view pairs fictional text with existing bicycle sample images to demonstrate layout; it is not a newly generated comic. The preview shares the local application's layout and styles; file selection, generation, and backend connections are disabled. Run `start-local-ui.bat` for the working application.
-
-To keep the preview aligned after UI changes, run `python scripts/build_ui_preview.py`. CI checks that the generated preview is up to date.
-
-All story stages are directly accessible: [Story input](https://marsguo2049.github.io/comfyui-py-workflow/#story/input), [Analysis & storyboard](https://marsguo2049.github.io/comfyui-py-workflow/#story/plan), and [Generation & export](https://marsguo2049.github.io/comfyui-py-workflow/#story/output). The storyboard uses a fictional story; the results view plays a separate existing public bicycle sample. No task creation or generation is required.
-
-## What it includes
-
-- A small standard-library HTTP client for local ComfyUI.
-- Image upload, prompt submission, history polling, output discovery, and artifact download.
-- Integrated Qwen Image Edit batch tools with persistent local jobs; the legacy desktop UI remains available as a Python module.
-- A two-frame chain: Z-Image Turbo → Qwen Image Edit 2509.
-- A three-frame video chain: Qwen frame 3 → two MiniMax H3 first/last-frame clips → one ten-second MP4.
-- API-format graphs for automation and UI-format graphs for visual editing.
-- A real bicycle example with metadata-clean preview frames and final video.
-- Local LM Studio story planning from text, Markdown, DOCX, and text-based PDF.
-- Dynamic shot counts, model-specific prompts, and review-before-execution mode.
-- MiniMax H3 FL2VA prompts with selectable automatic, disabled, or required dialogue.
-- Browser-friendly fast-start MP4 output with seeking and byte-range playback.
-- Optional private single-image reference input for Qwen-based scene keyframes.
-
-## Pipeline
-
-```text
-Z-Image frame 1
-  -> Qwen Image Edit frame 2
-  -> Qwen Image Edit frame 3
-  -> MiniMax H3 clip 1 (frame 1 to frame 2)
-  -> MiniMax H3 clip 2 (frame 2 to frame 3)
-  -> trim and concatenate into one ten-second MP4
-```
+- batch Qwen Image Edit jobs with multi-file, folder, and drag-and-drop input;
+- batch MiniMax H3 first/last-frame videos with natural-order or same-name pairing;
+- pairing preview before uploads or inference;
+- duration, aspect ratio, resolution, steps, seeds, timeout, and optional workflow overrides;
+- persistent progress and job history, image downloads, and byte-range MP4 playback;
+- one saved loopback ComfyUI address, with no LM Studio dependency.
 
 ## Quick start
 
-Install the project with document and media support:
+Install the project and optional media support:
 
 ```powershell
-python -m pip install -e ".[all]"
+python -m pip install -e ".[media]"
 ```
 
-For batch editing existing images, start ComfyUI and double-click
-`start-batch-image-edit-ui.bat` to open the Studio's Batch tools workspace. It accepts multiple files or a folder, applies
-one shared prompt, and stores each job under `outputs/offline-studio/batch-jobs/`. See the
-[Chinese batch UI guide](BATCH_IMAGE_EDIT_UI.zh-CN.md). Only edit images you own
-or are authorized to modify.
-
-For the offline browser UI, double-click `start-local-ui.bat` on Windows or run:
+Start ComfyUI at `http://127.0.0.1:8188`, then double-click `start-local-ui.bat` or run:
 
 ```powershell
-cpw-local-ui
+cpw-workbench
 ```
 
-The UI binds to `127.0.0.1`, accepts PDF/DOCX/Markdown/TXT plus one optional
-PNG/JPEG/WebP visual reference, asks a local LM
-Studio model to analyze the story and recommend a duration, requires separate
-duration and storyboard confirmations, unloads the text model before rendering,
-checks the local ComfyUI workflows, and shows resumable generation progress and
-local media results. When a reference image is present, independent scene starts
-use Qwen Image Edit instead of Z-Image; continuous shots still inherit the prior
-end frame. See [the Chinese offline guide](OFFLINE_STUDIO.zh-CN.md).
+The Workbench opens at `http://127.0.0.1:7860/#batch`. Jobs are stored under:
 
-Start ComfyUI at `http://127.0.0.1:8188`, install the documented models and custom nodes, then run the complete public example:
-
-```powershell
-python examples/bicycle-sequence/run.py
+```text
+outputs/comfyui-workbench/batch-jobs/<job-id>/
 ```
 
-Outputs are written below `outputs/` and are ignored by Git. Use `--server` if ComfyUI is listening at a different address.
+Use `--output-root` to choose another batch-job root. Existing `outputs/offline-studio/` histories are left untouched and are not migrated automatically.
 
-The lower-level commands are also available:
+See [batch image editing](BATCH_IMAGE_EDIT_UI.zh-CN.md) and [first/last-frame video](BATCH_VIDEO.zh-CN.md) for detailed usage. Only edit media you own or are authorized to modify.
+
+## Python workflows and CLI
+
+The lower-level ComfyUI execution APIs and workflow examples remain part of this package:
 
 ```powershell
 cpw-image-sequence --help
 cpw-video-sequence --help
+python examples/bicycle-sequence/run.py
 ```
 
-## Automatic story-to-video planning
+The bicycle example builds three frames and two MiniMax H3 clips, then concatenates them into a ten-second MP4. Outputs are written below `outputs/` and ignored by Git. Use `--server` when ComfyUI listens on another loopback address.
 
-Start the LM Studio local server, then create a plan without running expensive
-image or video generation:
+Legacy story planning is also retained as a library/CLI workflow for existing users:
 
 ```powershell
 cpw-story-video `
@@ -106,76 +68,36 @@ cpw-story-video `
   --model "YOUR-LM-STUDIO-MODEL-ID"
 ```
 
-LM Studio returns a JSON-schema-constrained plan. Python fixes the number and
-duration of shots from the requested runtime; the model chooses story beats,
-continuous transitions versus cuts, a visual bible, and separate prompts for
-Z-Image, Qwen Image Edit, and MiniMax H3. The generated plan is written below
-`outputs/story-video/plans/` for review.
-
-After reviewing or editing the plan, start ComfyUI and execute it:
+Review the generated plan before execution, then run:
 
 ```powershell
 cpw-story-video --plan outputs/story-video/plans/PLAN-ID/story-plan.json --execute
 ```
 
-This two-command flow is recommended on limited-VRAM machines: close LM Studio
-or unload its model before starting ComfyUI. If `--execute` is used in the same
-command that creates a plan, the CLI unloads the LM Studio model through its
-local API before contacting ComfyUI. Keeping both models loaded requires the
-explicit `--keep-lm-loaded` flag and is not recommended for a 12 GB GPU.
-
-Direct text is accepted with `--story`. TXT, Markdown, DOCX, and text-based PDFs
-are accepted with `--input`. Long sources are summarized in local chunks before
-storyboarding. Scanned PDFs require OCR because this pipeline sends extracted
-text—not document page images—to LM Studio. LM Studio is restricted to a
-loopback URL by default so document content is not accidentally sent to a remote
-server. See [the automatic example](examples/auto-story-video/README.md).
-
-ComfyUI alone can execute an existing `story-plan.json`, including one written
-or edited manually. Its diffusion text encoders are not general chat LLMs, so
-they cannot replace LM Studio for reliable document understanding and
-storyboarding. Loading a full LLM through a ComfyUI custom node would consume
-similar model memory while adding a more fragile dependency.
-
-For a no-LM-Studio demonstration, run the explicitly public
-[`story-plan.example.json`](examples/auto-story-video/story-plan.example.json)
-directly with `--execute`.
+This CLI accepts direct text plus TXT, Markdown, DOCX, and text-based PDF. Scanned PDFs require OCR. Its LM Studio URL is loopback-restricted by default. The browser UI for these creative workflows is maintained by [Offline Studio](https://github.com/marsguo2049/offline-studio).
 
 ## Workflows and models
 
-See [workflows/README.md](workflows/README.md) for exact model filenames, directories, custom-node dependencies, and the difference between API and UI formats.
-
-All generation prompt fields in the six committed workflow files are empty. Example prompts are stored explicitly in [`prompts.example.json`](examples/bicycle-sequence/prompts.example.json) and are injected at runtime. Model weights are never included.
-
-## Example result
-
-The [bicycle sequence](examples/bicycle-sequence/README.md) contains three keyframes and the final MP4. The public PNGs have no embedded ComfyUI prompt or workflow metadata.
-
-## Relationship to workflow research
-
-[`multi-model-workflow-optimization`](https://github.com/marsguo2049/multi-model-workflow-optimization) studies model selection, routing, evaluation, cost, latency, and resource-aware workflow optimization. This repository is a concrete ComfyUI execution backend that research systems can call; it does not contain the optimization research itself.
+See [workflows/README.md](workflows/README.md) for model filenames, directories, custom-node dependencies, and the distinction between API and UI workflow formats. The six committed workflow graphs contain empty generation prompts; public example prompts are injected at runtime. Model weights are never included.
 
 ## Repository layout
 
-- `src/comfyui_py_workflow`: client and reusable Python orchestration.
-- `workflows/api`: prompt/API graphs consumed by Python.
+- `src/comfyui_py_workflow`: ComfyUI client, batch engines, reusable orchestration, and compatibility APIs.
+- `src/comfyui_py_workflow/web`: ComfyUI-only Workbench shell and shared batch fragment.
+- `workflows/api`: API graphs consumed by Python.
 - `workflows/ui`: editable ComfyUI canvas exports.
-- `examples/bicycle-sequence`: runnable example and sanitized media.
-- `examples/auto-story-video`: local LM Studio planning example.
-- `docs`: privacy-safe static UI preview published with GitHub Pages.
-- `tests`: offline client, workflow, and privacy checks.
+- `examples`: runnable, sanitized examples.
+- `docs`: privacy-safe static Workbench preview.
+- `tests`: offline client, workflow, boundary, and privacy checks.
 
 ## Tests
 
 ```powershell
 python -m pip install -e ".[dev,all]"
 python -m pytest
+python scripts/build_ui_preview.py --check
 ```
 
 ## License
 
-Unless a file states otherwise, original repository content is provided under the **PolyForm Noncommercial License 1.0.0**. See [LICENSE](LICENSE).
-
-Noncommercial use covered by that license is permitted. **Commercial use requires separate written permission from the author.**
-
-The adapted Comfy Org workflow templates retain their MIT notice. Models, custom nodes, ComfyUI itself, and other third-party components retain their own licenses. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+Unless a file states otherwise, original repository content is provided under the **PolyForm Noncommercial License 1.0.0**. See [LICENSE](LICENSE). Commercial use requires separate written permission. Adapted Comfy Org workflow templates retain their MIT notice; models, custom nodes, ComfyUI, and other third-party components retain their own licenses. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

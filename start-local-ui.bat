@@ -9,8 +9,8 @@ if not exist ".venv\Scripts\python.exe" (
   exit /b 1
 )
 
-echo Starting Offline Studio on http://127.0.0.1:7860
+echo Starting ComfyUI Workbench on http://127.0.0.1:7860/#batch
 ".venv\Scripts\python.exe" -m comfyui_py_workflow.local_ui
 echo.
-echo Offline Studio stopped.
+echo ComfyUI Workbench stopped.
 pause

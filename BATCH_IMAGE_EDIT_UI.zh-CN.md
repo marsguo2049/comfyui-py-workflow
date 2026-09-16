@@ -1,12 +1,12 @@
-# Offline Studio 批量图片编辑
+# ComfyUI Workbench 批量图片编辑
 
-批量图片编辑已整合到 Offline Studio 的“批量工具”工作区，与故事视频共用服务设置。多张图片使用相同的修改提示词，由本机 ComfyUI 逐张处理。
+批量图片编辑位于独立的 ComfyUI Workbench。多张图片使用相同的修改提示词，由本机 ComfyUI 逐张处理；它不连接 LM Studio，也不包含故事、漫画或翻译界面。这些创作功能请使用 [Offline Studio](https://github.com/marsguo2049/offline-studio)（默认端口 `7870`）。
 
 ## 启动
 
 1. 启动 ComfyUI，准备 Qwen Image Edit 2509 工作流所需模型与节点。
-2. 双击 `start-local-ui.bat`，选择“批量工具”；也可以双击 `start-batch-image-edit-ui.bat` 直接打开该工作区。
-3. 默认地址为 `http://127.0.0.1:7860/#batch`。若 Studio 已运行，直接在已有页面切换，无需再次启动。
+2. 双击 `start-local-ui.bat` 或 `start-batch-image-edit-ui.bat`。
+3. 默认地址为 `http://127.0.0.1:7860/#batch`。若 Workbench 已运行，直接打开已有页面，无需再次启动。
 
 终端入口：
 
@@ -33,17 +33,17 @@
 默认目录：
 
 ```text
-outputs/offline-studio/batch-jobs/<任务编号>/
+outputs/comfyui-workbench/batch-jobs/<任务编号>/
   input/       上传的图片副本
   output/      编辑结果
   job.json     参数、状态、每张结果及错误
 ```
 
-每个任务使用独立目录，原始图片不被修改，重名图片也不会覆盖彼此。使用 `--project-root` 时，批量任务位于指定目录下的 `batch-jobs/`。
+每个任务使用独立目录，原始图片不被修改，重名图片也不会覆盖彼此。可用 `--output-root` 指定完整任务根目录。旧版 `outputs/offline-studio/` 历史不会删除或自动迁移；需要查看时请保留该目录。
 
 关闭浏览器不会停止后台任务。重新打开页面后，点击“最近任务”恢复查看；该列表显示最近 20 个任务。关闭或重启 Python 服务后，未完成任务会标为“已中断”，已完成结果保留。当前版本不自动重跑失败或中断的图片，请新建任务添加这些图片。
 
-同时只允许运行一个网页批量任务。故事视频和旧桌面工具各自提交任务，如同时使用会进入同一个 ComfyUI 队列。
+同时只允许运行一个 Workbench 批量任务。其他程序如果也向同一个 ComfyUI 提交任务，会进入同一个 ComfyUI 队列。
 
 页面适配窄屏和触控操作，但服务仍只允许本机回环地址，不开放局域网或公网访问。上传内容、提示词和结果均保存在被 Git 忽略的 `outputs/` 中；自定义输出根目录请自行保持在忽略范围内。
 

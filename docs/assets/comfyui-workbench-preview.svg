@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="900" viewBox="0 0 1440 900" role="img" aria-labelledby="title desc">
+<title id="title">ComfyUI Workbench batch video overview</title>
+<desc id="desc">A static illustration of first and last frame pairing in the ComfyUI Workbench.</desc>
+<rect width="1440" height="900" fill="#f7f8fa"/>
+<rect x="0" y="0" width="224" height="900" fill="#fff"/>
+<rect x="24" y="32" width="38" height="38" rx="11" fill="#525ce5"/>
+<text x="35" y="59" fill="#fff" font-size="24" font-family="Segoe UI, sans-serif">C</text>
+<text x="76" y="51" fill="#202733" font-size="18" font-weight="700" font-family="Segoe UI, sans-serif">ComfyUI Workbench</text>
+<text x="76" y="70" fill="#707887" font-size="12" font-family="Segoe UI, sans-serif">本地批量工作台</text>
+<rect x="18" y="137" width="188" height="48" rx="8" fill="#eef0ff"/>
+<text x="45" y="168" fill="#525ce5" font-size="16" font-family="Segoe UI, sans-serif">▦　批量工具</text>
+<text x="45" y="218" fill="#707887" font-size="16" font-family="Segoe UI, sans-serif">⚙　ComfyUI 设置</text>
+<text x="264" y="76" fill="#707887" font-size="13" font-family="Segoe UI, sans-serif">BATCH TOOLS</text>
+<text x="264" y="123" fill="#202733" font-size="34" font-weight="700" font-family="Segoe UI, sans-serif">一次设定，批量完成。</text>
+<text x="264" y="156" fill="#707887" font-size="15" font-family="Segoe UI, sans-serif">批量修改图片，或用首尾帧生成视频。</text>
+<rect x="264" y="205" width="1116" height="620" rx="12" fill="#fff" stroke="#e3e6ec"/>
+<text x="292" y="250" fill="#202733" font-size="20" font-weight="700" font-family="Segoe UI, sans-serif">批量首尾帧视频</text>
+<rect x="292" y="282" width="500" height="190" rx="10" fill="#fafbff" stroke="#cdd1e7"/>
+<rect x="820" y="282" width="500" height="190" rx="10" fill="#fafbff" stroke="#cdd1e7"/>
+<text x="320" y="322" fill="#202733" font-size="18" font-weight="700" font-family="Segoe UI, sans-serif">首帧</text>
+<text x="848" y="322" fill="#202733" font-size="18" font-weight="700" font-family="Segoe UI, sans-serif">尾帧</text>
+<text x="320" y="370" fill="#707887" font-size="15" font-family="Segoe UI, sans-serif">sample-start-01.png</text>
+<text x="848" y="370" fill="#707887" font-size="15" font-family="Segoe UI, sans-serif">sample-end-01.png</text>
+<text x="320" y="410" fill="#707887" font-size="15" font-family="Segoe UI, sans-serif">sample-start-02.png</text>
+<text x="848" y="410" fill="#707887" font-size="15" font-family="Segoe UI, sans-serif">sample-end-02.png</text>
+<text x="292" y="526" fill="#202733" font-size="17" font-weight="700" font-family="Segoe UI, sans-serif">配对预览</text>
+<rect x="292" y="550" width="1028" height="54" rx="8" fill="#f7f8fa"/>
+<text x="316" y="583" fill="#505866" font-size="15" font-family="Segoe UI, sans-serif">1. sample-start-01.png → sample-end-01.png</text>
+<rect x="292" y="616" width="1028" height="54" rx="8" fill="#f7f8fa"/>
+<text x="316" y="649" fill="#505866" font-size="15" font-family="Segoe UI, sans-serif">2. sample-start-02.png → sample-end-02.png</text>
+<text x="292" y="715" fill="#707887" font-size="14" font-family="Segoe UI, sans-serif">预计每段 5.17 秒 · 125 帧 / 24 fps · 共 2 段</text>
+<rect x="1110" y="745" width="210" height="44" rx="8" fill="#525ce5"/>
+<text x="1142" y="773" fill="#fff" font-size="15" font-weight="700" font-family="Segoe UI, sans-serif">开始批量处理 →</text>
+<text x="264" y="865" fill="#9299a7" font-size="12" font-family="Segoe UI, sans-serif">界面示意 · 虚构文件名 · 无后台连接</text>
+</svg>

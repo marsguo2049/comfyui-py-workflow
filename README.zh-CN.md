@@ -2,80 +2,64 @@
 
 [English](README.md) | **简体中文**
 
-用 Python 直接运行、修改参数并串联本地 ComfyUI API 工作流。
+用 Python 直接运行、修改参数并串联本地 ComfyUI API 工作流。项目包含一个仅绑定回环地址的 **ComfyUI Workbench**，用于批量图片编辑和批量首尾帧视频。
 
-本仓库关注的是执行基础设施，而不是模型路由研究：读取导出的 API 图，替换指定节点输入，提交到 ComfyUI，等待完成，下载结果，再把一个工作流的输出交给下一个工作流。
+独立 Workbench 只连接 ComfyUI。故事视频、故事漫画、文档翻译和 LM Studio 共享设置已迁移到独立的 [Offline Studio](https://github.com/marsguo2049/offline-studio)，默认使用端口 `7870`。本仓库仍保留故事与漫画引擎的兼容 Python API。
 
 > 这是一个独立的社区项目，与 Comfy Org 没有隶属或官方认可关系。
 
-## 统一工作台
+## ComfyUI Workbench
 
-双击 `start-local-ui.bat`，在同一个 Offline Studio 中切换 **故事视频 / 故事漫画 / 批量工具 / 服务设置**。批量图片编辑支持多选、文件夹与拖放、共享提示词、进度、历史任务、原图查看和结果下载；高级参数默认折叠。界面适配窄屏，服务仍仅绑定本机地址。
+[![ComfyUI Workbench 首尾帧视频虚构配对预览](docs/assets/comfyui-workbench-preview.svg)](https://marsguo2049.github.io/comfyui-py-workflow/#batch)
 
-**故事漫画**将故事拆为 2–16 格，复用 LM Studio、Z-Image 与 Qwen Image Edit。可审阅人物设定和逐格提示词、连续生图、断点继续、从指定格重做，并导出独立 HTML 阅读页和 ZIP 图片包。旁白与对白排在画面下方。查看[漫画界面预览](https://marsguo2049.github.io/comfyui-py-workflow/#comic)和[使用说明](STORY_COMIC.zh-CN.md)。
+[打开静态公开预览](https://marsguo2049.github.io/comfyui-py-workflow/#batch)。页面只使用虚构文件名，禁用上传与任务操作，并通过 `connect-src 'none'` 禁止连接后台。
 
-## 界面预览
+Workbench 提供：
 
-[![Offline Studio 统一工作台概览：批量图片编辑、故事视频与服务设置](docs/assets/offline-studio-preview.svg)](https://marsguo2049.github.io/comfyui-py-workflow/#batch)
-
-[打开当前界面预览](https://marsguo2049.github.io/comfyui-py-workflow/#batch)，可切换 **故事漫画 / 批量工具 / 故事视频 / 服务设置**。概览示意图与预览页均使用公开示例；漫画页以虚构文字搭配已有单车样图演示排版，不是新生成的漫画作品。预览页与本地应用共用布局和样式，文件选择、生成操作和后台连接均已禁用。真正运行项目请双击 `start-local-ui.bat`。
-
-修改本地 UI 后，运行 `python scripts/build_ui_preview.py` 即可同步预览页。CI 会检查生成内容是否保持同步。
-
-故事视频的三个阶段可直接点开：[输入故事](https://marsguo2049.github.io/comfyui-py-workflow/#story/input)、[分析与分镜](https://marsguo2049.github.io/comfyui-py-workflow/#story/plan)、[生成与导出](https://marsguo2049.github.io/comfyui-py-workflow/#story/output)。分镜使用虚构故事，结果页提供仓库已有的独立单车样片播放与下载，无需创建或运行任务。
-
-## 包含内容
-
-- 基于 Python 标准库的小型本地 ComfyUI HTTP 客户端。
-- 图片上传、任务提交、运行历史轮询、输出识别和文件下载。
-- Offline Studio 内置 Qwen Image Edit 批量工具，可对多个文件或整个文件夹统一执行图片修改；旧桌面入口仍可通过 Python 模块使用。
-- 两帧图片链：Z-Image Turbo → Qwen Image Edit 2509。
-- 三帧视频链：Qwen 生成第 3 帧 → MiniMax H3 生成两段首尾帧视频 → 拼接为 10 秒 MP4。
-- 用于脚本自动化的 API 工作流和用于可视化编辑的 UI 工作流。
-- 真实单车示例、清除隐藏元数据的预览帧和最终视频。
-- 使用本地 LM Studio 从文本、Markdown、DOCX 和文本型 PDF 生成分镜。
-- 动态镜头数量、模型专用提示词，以及先审阅再执行的安全模式。
-- Offline Story Studio 可选上传一张私有参考图，并用 Qwen Image Edit 保持新场景的主体或画风。
-
-## 处理流程
-
-```text
-Z-Image 生成第 1 帧
-  -> Qwen Image Edit 生成第 2 帧
-  -> Qwen Image Edit 生成第 3 帧
-  -> MiniMax H3 生成片段 1（第 1 帧到第 2 帧）
-  -> MiniMax H3 生成片段 2（第 2 帧到第 3 帧）
-  -> 裁切并拼接为一段 10 秒 MP4
-```
+- Qwen Image Edit 批量图片任务，支持多选、文件夹和拖放；
+- MiniMax H3 批量首尾帧视频，支持自然排序或同名配对；
+- 上传与推理前的配对预览；
+- 时长、比例、分辨率、步数、种子、超时及自定义工作流参数；
+- 持久化进度与任务历史、图片下载和支持拖动播放的 MP4 字节范围响应；
+- 单独保存的本机 ComfyUI 地址，不依赖 LM Studio。
 
 ## 快速开始
 
-安装项目、文档和媒体处理依赖：
+安装项目与可选媒体依赖：
 
 ```powershell
-python -m pip install -e ".[all]"
+python -m pip install -e ".[media]"
 ```
 
-批量编辑已有图片时，先启动 ComfyUI，然后在 Offline Studio 选择“批量工具”，或双击 `start-batch-image-edit-ui.bat` 直接进入。结果按任务保存在 `outputs/offline-studio/batch-jobs/`；详细说明见 [`BATCH_IMAGE_EDIT_UI.zh-CN.md`](BATCH_IMAGE_EDIT_UI.zh-CN.md)。
-
-在 `http://127.0.0.1:8188` 启动 ComfyUI，安装文档列出的模型和自定义节点，然后运行完整示例：
+在 `http://127.0.0.1:8188` 启动 ComfyUI，然后双击 `start-local-ui.bat`，或运行：
 
 ```powershell
-python examples/bicycle-sequence/run.py
+cpw-workbench
 ```
 
-结果写入 `outputs/`，Git 不会跟踪它们。如果 ComfyUI 地址不同，可以通过 `--server` 指定。
+Workbench 地址为 `http://127.0.0.1:7860/#batch`。任务默认保存在：
 
-也可以分别调用底层命令：
+```text
+outputs/comfyui-workbench/batch-jobs/<任务编号>/
+```
+
+可用 `--output-root` 指定其他任务根目录。旧版 `outputs/offline-studio/` 历史不会删除，也不会自动迁移。
+
+详细操作见[批量图片编辑](BATCH_IMAGE_EDIT_UI.zh-CN.md)和[批量首尾帧视频](BATCH_VIDEO.zh-CN.md)。只处理自己拥有或获授权修改的媒体。
+
+## Python 工作流与命令行
+
+底层 ComfyUI 执行 API 和工作流示例继续保留：
 
 ```powershell
 cpw-image-sequence --help
 cpw-video-sequence --help
+python examples/bicycle-sequence/run.py
 ```
 
-## 自动从故事生成视频计划
+单车示例生成三张关键帧和两段 MiniMax H3 视频，再拼接为十秒 MP4。结果写入 `outputs/` 并由 Git 忽略；ComfyUI 使用其他回环地址时可通过 `--server` 指定。
 
-启动 LM Studio 本地服务后，先只生成计划，不运行耗时的图片和视频模型：
+旧版故事规划也继续作为兼容库与命令行工作流提供：
 
 ```powershell
 cpw-story-video `
@@ -84,57 +68,36 @@ cpw-story-video `
   --model "你的-LM-STUDIO-模型-ID"
 ```
 
-LM Studio 会返回受 JSON Schema 约束的计划。Python 根据目标时间严格确定镜头数量和每段时长；本地模型负责选择情节节点、连续转场或切镜、统一视觉设定，并分别编写 Z-Image、Qwen Image Edit 和 MiniMax H3 提示词。计划默认保存在 `outputs/story-video/plans/`，方便生成媒体前人工检查。
-
-检查或修改计划后，启动 ComfyUI 并执行：
+审阅计划后执行：
 
 ```powershell
 cpw-story-video --plan outputs/story-video/plans/计划编号/story-plan.json --execute
 ```
 
-对于显存有限的电脑，推荐使用这两条命令：生成计划后关闭 LM Studio 或卸载其中的模型，再启动 ComfyUI。如果同一条命令同时使用故事输入和 `--execute`，CLI 会先通过本地 API 卸载 LM Studio 模型，再连接 ComfyUI。只有显式指定 `--keep-lm-loaded` 才会保留模型；12GB 显存不推荐这样做。
-
-短故事可以用 `--story` 直接输入；TXT、Markdown、DOCX 和文本型 PDF 使用 `--input`。长文档会先在本地分块摘要，再进行分镜。扫描版 PDF 必须先 OCR，因为当前流程传给 LM Studio 的是提取文本，而不是页面图片。LM Studio 地址默认限制为本机回环地址，避免误把文档发送到远程服务器。完整说明见[自动故事视频示例](examples/auto-story-video/README.md)。
-
-纯 ComfyUI 可以执行已经存在的 `story-plan.json`，包括人工编写或修改的计划；但扩散模型使用的文本编码器不是通用对话大模型，不能可靠代替 LM Studio 完成长文理解和结构化分镜。通过 ComfyUI custom node 再加载一个完整 LLM，通常仍会消耗相近的模型内存，并增加依赖复杂度。
-
-如果想完全跳过 LM Studio，可以直接用明确标注为公开内容的 [`story-plan.example.json`](examples/auto-story-video/story-plan.example.json) 配合 `--execute` 演示，也可以按照相同结构人工编写计划。
+该命令支持直接文本、TXT、Markdown、DOCX 和文本型 PDF；扫描 PDF 需要 OCR。LM Studio 地址默认限制为回环地址。这些创作工作流的浏览器界面由 [Offline Studio](https://github.com/marsguo2049/offline-studio) 维护。
 
 ## 工作流与模型
 
-[workflows/README.md](workflows/README.md) 列出了准确的模型文件名、存放目录、自定义节点依赖，以及 API/UI 两种格式的区别。
-
-提交到仓库的六份工作流中，所有生成提示词字段都为空。公开示例提示词明确保存在 [`prompts.example.json`](examples/bicycle-sequence/prompts.example.json)，由脚本在运行时注入。仓库不会包含模型权重。
-
-## 示例结果
-
-[单车序列](examples/bicycle-sequence/README.md)提供三个关键帧和最终 MP4。公开 PNG 不包含 ComfyUI 提示词或工作流隐藏元数据。
-
-## 与工作流优化研究的关系
-
-[`multi-model-workflow-optimization`](https://github.com/marsguo2049/multi-model-workflow-optimization) 研究模型选择、路由、评估、成本、时延和资源约束下的工作流优化。本仓库是研究系统可以调用的具体 ComfyUI 执行后端，不包含优化研究本身。
+[workflows/README.md](workflows/README.md) 列出模型文件名、目录、自定义节点依赖，以及 API/UI 两种工作流格式。提交的六份工作流图不含生成提示词，公开示例提示词在运行时注入；仓库不包含模型权重。
 
 ## 仓库结构
 
-- `src/comfyui_py_workflow`：客户端和可复用 Python 编排。
+- `src/comfyui_py_workflow`：ComfyUI 客户端、批量引擎、可复用编排和兼容 API。
+- `src/comfyui_py_workflow/web`：只包含 ComfyUI 的 Workbench 外壳与共享批量界面片段。
 - `workflows/api`：Python 使用的 API 图。
 - `workflows/ui`：可编辑的 ComfyUI 画布工作流。
-- `examples/bicycle-sequence`：可运行示例和脱敏媒体。
-- `examples/auto-story-video`：本地 LM Studio 自动分镜示例。
-- `docs`：经过隐私检查、由 GitHub Pages 发布的静态界面预览。
-- `tests`：离线客户端、工作流与隐私检查。
+- `examples`：可运行、已脱敏的示例。
+- `docs`：隐私安全的静态 Workbench 预览。
+- `tests`：离线客户端、工作流、边界和隐私检查。
 
 ## 测试
 
 ```powershell
 python -m pip install -e ".[dev,all]"
 python -m pytest
+python scripts/build_ui_preview.py --check
 ```
 
 ## 许可证
 
-除非文件另有说明，本仓库原创内容采用 **PolyForm Noncommercial License 1.0.0**。详见 [LICENSE](LICENSE)。
-
-该许可证覆盖的非商业用途可以使用。**商业使用需要事先取得作者的单独书面许可。**
-
-改编自 Comfy Org 的工作流模板保留其 MIT 声明。模型、自定义节点、ComfyUI 本身和其他第三方组件继续使用各自许可证，详见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
+除非文件另有说明，本仓库原创内容采用 **PolyForm Noncommercial License 1.0.0**，详见 [LICENSE](LICENSE)。商业使用需要单独书面许可。改编自 Comfy Org 的工作流模板保留 MIT 声明；模型、自定义节点、ComfyUI 和其他第三方组件继续使用各自许可证，详见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。

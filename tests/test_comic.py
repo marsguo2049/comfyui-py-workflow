@@ -1,10 +1,8 @@
 from __future__ import annotations
 
-import json
 import threading
 import zipfile
 from copy import deepcopy
-from http.client import HTTPConnection
 from pathlib import Path
 
 import pytest
@@ -13,7 +11,6 @@ from comfyui_py_workflow import comic_studio
 from comfyui_py_workflow.client import ComfyUIClient
 from comfyui_py_workflow.comic import create_comic_plan, validate_comic_plan
 from comfyui_py_workflow.comic_studio import ComicStudio
-from comfyui_py_workflow.local_ui import SingleInstanceHTTPServer, StudioRequestHandler
 
 ROOT = Path(__file__).resolve().parents[1]
 PNG = b'\x89PNG\r\n\x1a\n' + b'fake-image'
@@ -191,34 +188,3 @@ def test_validation_and_private_paths(tmp_path):
         with pytest.raises(FileNotFoundError): studio.media_path(job['id'], path)
     job['status'] = 'running'; studio._save(job)
     assert ComicStudio(tmp_path).get(job['id'])['status'] == 'interrupted'
-
-
-def test_comic_http_routes_and_exports(tmp_path, monkeypatch):
-    client = FakeClient(); monkeypatch.setattr(comic_studio, 'ComfyUIClient', lambda url: client)
-    class Handler(StudioRequestHandler):
-        comic = ComicStudio(tmp_path)
-        def log_message(self, *args): pass
-    server = SingleInstanceHTTPServer(('127.0.0.1', 0), Handler)
-    worker = threading.Thread(target=server.serve_forever, daemon=True); worker.start()
-    connection = HTTPConnection(*server.server_address, timeout=5)
-    def request(method, path, body=None, headers=None):
-        connection.request(method, path, body=body, headers=headers or {})
-        response = connection.getresponse()
-        return response.status, response.read()
-    try:
-        status, body = request('POST', '/api/comic/create', json.dumps({'text': 'A letter arrives'}))
-        assert status == 201
-        job = json.loads(body)
-        assert request('POST', f'/api/comic/reference?id={job["id"]}', PNG)[0] == 201
-        status, body = request('POST', '/api/comic/save-plan', json.dumps({'id': job['id'], 'revision': 0, 'plan': sample_plan()}))
-        assert status == 200; job = json.loads(body)
-        assert request('POST', '/api/comic/start', json.dumps({'id': job['id'], 'revision': job['revision']}))[0] == 202
-        assert finish(Handler.comic, job['id'])['status'] == 'succeeded'
-        assert request('GET', f'/comic-media/{job["id"]}/comic.zip')[0] == 200
-        assert request('HEAD', f'/comic-media/{job["id"]}/panel-0001.png') == (200, b'')
-        assert request('GET', f'/comic-media/{job["id"]}/panel-0001.png', headers={'Range': 'bytes=0-7'}) == (206, PNG[:8])
-        assert request('GET', f'/comic-media/{job["id"]}/job.json')[0] == 404
-        assert request('POST', '/api/comic/create', b'{"text":"no"}', {'Origin': 'https://example.com'})[0] == 400
-        assert len(json.loads(request('GET', '/api/comic/jobs')[1])['jobs']) == 1
-    finally:
-        connection.close(); server.shutdown(); server.server_close(); worker.join(timeout=3)

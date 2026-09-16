@@ -7,20 +7,20 @@ set "CPW_PYTHON=%~dp0.venv\Scripts\python.exe"
 if not exist "%CPW_PYTHON%" goto missing_python
 if /I "%~1"=="--diagnose" goto diagnose
 
-echo Starting Offline Studio - Batch Tools on http://127.0.0.1:7860/#batch
+echo Starting ComfyUI Workbench on http://127.0.0.1:7860/#batch
 "%CPW_PYTHON%" -m comfyui_py_workflow.local_ui --view batch
 set "CPW_EXIT_CODE=%ERRORLEVEL%"
 
 if not "%CPW_EXIT_CODE%"=="0" (
   echo.
   echo The UI stopped with exit code %CPW_EXIT_CODE%.
-  echo If Studio is already running, open http://127.0.0.1:7860/#batch
+  echo If Workbench is already running, open http://127.0.0.1:7860/#batch
   pause
 )
 exit /b %CPW_EXIT_CODE%
 
 :diagnose
-"%CPW_PYTHON%" -c "import sys; import comfyui_py_workflow.local_ui, comfyui_py_workflow.batch_studio; print('Python:', sys.executable); print('Offline Studio batch tools: OK')"
+"%CPW_PYTHON%" -c "import sys; import comfyui_py_workflow.local_ui, comfyui_py_workflow.batch_studio; print('Python:', sys.executable); print('ComfyUI Workbench: OK')"
 exit /b %ERRORLEVEL%
 
 :missing_python
